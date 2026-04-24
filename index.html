@@ -1221,23 +1221,70 @@ function renderAdminForm(prod){
   `;
 }
 
+const GAS_LANCHE = 'https://script.google.com/macros/s/AKfycbxJCRs4Ijzoovtvyo2pq4xnHNmpBPEPTRcAXyR5sas8Dp0AaQgJb8NvXGUMvEtRUf4L/exec';
+
 function handleImgUpload(input){
   const file = input.files[0];
   if(!file) return;
-  
+
+  /* mostra preview local imediatamente enquanto faz upload */
   const reader = new FileReader();
   reader.onload = e => {
-    const src = e.target.result;
-    document.getElementById('prodImg').value = src;
-    document.getElementById('imgPreviewArea').innerHTML = `<img src="${src}" class="img-preview" id="imgPreview">`;
+    const base64full = e.target.result;                      // "data:image/jpeg;base64,XXXX"
+    const [header, base64data] = base64full.split(',');
+    const mimeType = header.match(/:(.*?);/)[1];
+
+    /* preview local */
+    document.getElementById('imgPreviewArea').innerHTML =
+      `<img src="${base64full}" class="img-preview">
+       <div id="uploadStatus" style="margin-top:8px;font-size:.78rem;font-weight:700;color:var(--brand)">⏳ Enviando para o Drive...</div>`;
+    document.getElementById('prodImg').value = '';           /* limpa até confirmar */
+
+    /* monta nome do arquivo com nome do produto + timestamp */
+    const nomeProd = (document.getElementById('prodName').value.trim() || 'produto')
+      .toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,'');
+    const fileName = `${nomeProd}-${Date.now()}.${mimeType.split('/')[1]||'jpg'}`;
+
+    fetch(GAS_LANCHE, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ imageData: base64data, mimeType, fileName })
+    })
+    .then(r => r.json())
+    .then(res => {
+      if(res.url){
+        document.getElementById('prodImg').value = res.url;
+        document.getElementById('imgPreviewArea').innerHTML =
+          `<img src="${res.url}" class="img-preview"
+            onerror="this.src='${base64full}'">
+           <div style="margin-top:8px;font-size:.78rem;font-weight:700;color:var(--green)">✅ Imagem salva no Drive!</div>`;
+      } else {
+        throw new Error('Resposta inválida');
+      }
+    })
+    .catch(() => {
+      /* fallback: guarda base64 local se GAS falhar */
+      document.getElementById('prodImg').value = base64full;
+      document.getElementById('imgPreviewArea').innerHTML =
+        `<img src="${base64full}" class="img-preview">
+         <div style="margin-top:8px;font-size:.78rem;font-weight:700;color:var(--amber)">⚠️ Salvo localmente (Drive indisponível)</div>`;
+    });
   };
   reader.readAsDataURL(file);
 }
 
 function saveProduct(e){
   e.preventDefault();
+
+  /* bloqueia se upload ainda estiver em andamento */
+  const imgVal = document.getElementById('prodImg').value;
+  const statusEl = document.getElementById('uploadStatus');
+  if(statusEl && !imgVal){
+    toast('⏳ Aguarde o upload da imagem finalizar.','error');
+    return;
+  }
+
   const data = getData();
-  
   const prod = {
     id: editingProductId || Date.now(),
     name: document.getElementById('prodName').value.trim(),
@@ -1245,20 +1292,20 @@ function saveProduct(e){
     group: document.getElementById('prodGroup').value,
     emoji: document.getElementById('prodEmoji').value.trim() || '🍔',
     desc: document.getElementById('prodDesc').value.trim(),
-    img: document.getElementById('prodImg').value,
+    img: imgVal,
     promo: document.getElementById('prodPromo').checked,
     oldPrice: document.getElementById('prodOldPrice') ? parseFloat(document.getElementById('prodOldPrice').value)||0 : 0,
   };
-  
+
   if(editingProductId){
     const idx = data.products.findIndex(p=>p.id===editingProductId);
     if(idx>=0) data.products[idx] = prod;
-    toast('Produto atualizado!','success');
+    toast('✅ Produto atualizado!','success');
   } else {
     data.products.push(prod);
-    toast('Produto cadastrado!','success');
+    toast('✅ Produto cadastrado!','success');
   }
-  
+
   saveData(data);
   editingProductId = null;
   switchAdminTab('produtos');
