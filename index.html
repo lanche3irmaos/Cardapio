@@ -1245,30 +1245,39 @@ function handleImgUpload(input){
       .toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,'');
     const fileName = `${nomeProd}-${Date.now()}.${mimeType.split('/')[1]||'jpg'}`;
 
-    fetch(GAS_LANCHE, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ imageData: base64data, mimeType, fileName })
-    })
-    .then(r => r.json())
-    .then(res => {
-      if(res.url){
+    /* JSONP — contorna CORS do Apps Script */
+    const cbName = 'gasImgCb_' + Date.now();
+    const script = document.createElement('script');
+
+    window[cbName] = function(res){
+      delete window[cbName];
+      script.remove();
+      if(res && res.url){
         document.getElementById('prodImg').value = res.url;
         document.getElementById('imgPreviewArea').innerHTML =
           `<img src="${res.url}" class="img-preview"
             onerror="this.src='${base64full}'">
            <div style="margin-top:8px;font-size:.78rem;font-weight:700;color:var(--green)">✅ Imagem salva no Drive!</div>`;
       } else {
-        throw new Error('Resposta inválida');
+        fallbackLocal();
       }
-    })
-    .catch(() => {
-      /* fallback: guarda base64 local se GAS falhar */
+    };
+
+    function fallbackLocal(){
       document.getElementById('prodImg').value = base64full;
       document.getElementById('imgPreviewArea').innerHTML =
         `<img src="${base64full}" class="img-preview">
          <div style="margin-top:8px;font-size:.78rem;font-weight:700;color:var(--amber)">⚠️ Salvo localmente (Drive indisponível)</div>`;
-    });
+    }
+
+    /* timeout de 15s */
+    const timeout = setTimeout(()=>{ delete window[cbName]; script.remove(); fallbackLocal(); }, 15000);
+    window[cbName]._timeout = timeout;
+
+    const params = encodeURIComponent(JSON.stringify({ imageData: base64data, mimeType, fileName }));
+    script.src = `${GAS_LANCHE}?action=upload&data=${params}&callback=${cbName}`;
+    script.onerror = ()=>{ clearTimeout(timeout); fallbackLocal(); };
+    document.body.appendChild(script);
   };
   reader.readAsDataURL(file);
 }
