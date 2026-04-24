@@ -18,17 +18,26 @@
 html{scroll-behavior:smooth}
 body{font-family:'Nunito',sans-serif;background:var(--cream);color:var(--text);overflow-x:hidden;min-height:100vh}
 
-/* ── INTRO SPLASH ── */
-#splash{position:fixed;inset:0;z-index:9999;background:linear-gradient(135deg,#FF4500 0%,#FF6B35 40%,#FFB347 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden}
-#splash .splash-title{font-family:'Fredoka One',cursive;font-size:clamp(2.5rem,8vw,5rem);color:#fff;text-shadow:0 4px 20px rgba(0,0,0,.3);text-align:center;animation:bounceIn .8s both}
-#splash .splash-sub{font-family:'Nunito',sans-serif;font-size:1.1rem;color:rgba(255,255,255,.85);margin-top:.5rem;animation:bounceIn .8s .2s both}
-#splash .splash-bar{width:200px;height:5px;background:rgba(255,255,255,.3);border-radius:10px;margin-top:2rem;overflow:hidden;animation:bounceIn .8s .4s both}
-#splash .splash-fill{height:100%;background:#fff;border-radius:10px;animation:fillBar 4.5s linear forwards}
-#charCanvas{width:220px;height:220px;margin-bottom:1rem}
+/* ── INTRO SPLASH PREMIUM ── */
+#splash{position:fixed;inset:0;z-index:9999;background:#0d0400;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden}
+#splashCanvas{position:absolute;inset:0;width:100%;height:100%}
+.splash-content{position:relative;z-index:2;text-align:center;display:flex;flex-direction:column;align-items:center}
+.splash-ring{width:130px;height:130px;border-radius:50%;border:2px solid rgba(255,180,50,.15);display:flex;align-items:center;justify-content:center;position:relative;margin-bottom:32px;animation:ringPulse 2s ease-in-out infinite}
+.splash-ring::before{content:'';position:absolute;inset:-8px;border-radius:50%;border:1px solid rgba(255,100,0,.1);animation:ringPulse 2s ease-in-out infinite .3s}
+.splash-ring::after{content:'';position:absolute;inset:-18px;border-radius:50%;border:1px solid rgba(255,60,0,.06);animation:ringPulse 2s ease-in-out infinite .6s}
+@keyframes ringPulse{0%,100%{transform:scale(1);opacity:.8}50%{transform:scale(1.05);opacity:1}}
+.splash-emblem{font-size:4rem;animation:emblemFloat 3s ease-in-out infinite;filter:drop-shadow(0 0 24px rgba(255,120,0,.6))}
+@keyframes emblemFloat{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-8px) scale(1.05)}}
+.splash-wordmark{font-family:'Fredoka One',cursive;font-size:clamp(2.4rem,7vw,4.5rem);color:#fff;line-height:1;letter-spacing:-1px;animation:wordIn 1s .4s both cubic-bezier(.16,1,.3,1)}
+.splash-wordmark span{color:transparent;-webkit-text-stroke:1px rgba(255,180,50,.6)}
+@keyframes wordIn{from{opacity:0;transform:translateY(24px) skewY(2deg)}to{opacity:1;transform:none}}
+.splash-tagline{font-size:.85rem;letter-spacing:6px;text-transform:uppercase;color:rgba(255,180,50,.7);margin-top:10px;font-weight:700;animation:wordIn 1s .7s both cubic-bezier(.16,1,.3,1)}
+.splash-divider{width:1px;height:40px;background:linear-gradient(180deg,transparent,rgba(255,120,0,.5),transparent);margin:20px auto;animation:wordIn 1s .9s both}
+.splash-bar{width:180px;height:2px;background:rgba(255,255,255,.08);border-radius:10px;overflow:hidden;animation:wordIn 1s 1s both}
+.splash-fill{height:100%;background:linear-gradient(90deg,#FF4500,#FFB347);border-radius:10px;animation:fillBar 4s .5s linear forwards}
 @keyframes fillBar{from{width:0}to{width:100%}}
-@keyframes bounceIn{from{opacity:0;transform:scale(.7) translateY(30px)}to{opacity:1;transform:scale(1) translateY(0)}}
-#splash.hide{animation:splashOut .6s forwards}
-@keyframes splashOut{to{opacity:0;transform:scale(1.05);pointer-events:none}}
+#splash.hide{animation:splashOut .8s cubic-bezier(.7,0,.3,1) forwards}
+@keyframes splashOut{0%{opacity:1;transform:none}60%{opacity:1;transform:scale(1.04)}100%{opacity:0;transform:scale(1.08)}}
 
 /* ── LAYOUT ── */
 #app{display:flex;min-height:100vh;opacity:0;transition:opacity .5s}
@@ -267,12 +276,18 @@ body{font-family:'Nunito',sans-serif;background:var(--cream);color:var(--text);o
 </head>
 <body>
 
-<!-- SPLASH SCREEN -->
+<!-- SPLASH SCREEN PREMIUM -->
 <div id="splash">
-  <canvas id="charCanvas"></canvas>
-  <div class="splash-title">🍔 Lanche 3 Irmãos</div>
-  <div class="splash-sub">Sabor que une família!</div>
-  <div class="splash-bar"><div class="splash-fill"></div></div>
+  <canvas id="splashCanvas"></canvas>
+  <div class="splash-content">
+    <div class="splash-ring">
+      <div class="splash-emblem">🍔</div>
+    </div>
+    <div class="splash-wordmark">Lanche <span>3</span> Irmãos</div>
+    <div class="splash-tagline">Sabor que une família</div>
+    <div class="splash-divider"></div>
+    <div class="splash-bar"><div class="splash-fill"></div></div>
+  </div>
 </div>
 
 <!-- LOGIN MODAL -->
@@ -463,105 +478,91 @@ body{font-family:'Nunito',sans-serif;background:var(--cream);color:var(--text);o
 
 <script>
 /* ════════════════════════
-   SPLASH — personagem animado
+   SPLASH — partículas premium
 ════════════════════════ */
 (function(){
-  const cv = document.getElementById('charCanvas');
+  const cv = document.getElementById('splashCanvas');
   const ctx = cv.getContext('2d');
-  cv.width = 220; cv.height = 220;
-  
-  const foods = ['🍔','🥤','🍟','🌭','🍕'];
-  let frame = 0, foodIdx = 0, bite = 0, mouthOpen = false;
-  
-  function drawChar(){
-    ctx.clearRect(0,0,220,220);
-    const cx = 110, cy = 115;
-    
-    // Body
-    ctx.fillStyle = '#FFD700';
-    ctx.beginPath();
-    ctx.ellipse(cx, cy+20, 45, 55, 0, 0, Math.PI*2);
-    ctx.fill();
-    
-    // Head
-    ctx.fillStyle = '#FFE0A0';
-    ctx.beginPath();
-    ctx.arc(cx, cy-40, 42, 0, Math.PI*2);
-    ctx.fill();
-    
-    // Hair
-    ctx.fillStyle = '#8B4513';
-    ctx.beginPath();
-    ctx.arc(cx, cy-72, 28, Math.PI, 0);
-    ctx.fill();
-    
-    // Eyes
-    const eyeOff = Math.sin(frame*0.12)*2;
-    ctx.fillStyle = '#222';
-    ctx.beginPath(); ctx.arc(cx-14, cy-44+eyeOff, 5, 0, Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.arc(cx+14, cy-44+eyeOff, 5, 0, Math.PI*2); ctx.fill();
-    
-    // Eye shine
-    ctx.fillStyle = '#fff';
-    ctx.beginPath(); ctx.arc(cx-12, cy-46+eyeOff, 2, 0, Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.arc(cx+16, cy-46+eyeOff, 2, 0, Math.PI*2); ctx.fill();
-    
-    // Cheeks
-    ctx.fillStyle = 'rgba(255,100,100,.3)';
-    ctx.beginPath(); ctx.ellipse(cx-22, cy-36, 8, 6, 0, 0, Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.ellipse(cx+22, cy-36, 8, 6, 0, 0, Math.PI*2); ctx.fill();
-    
-    // Mouth - chewing animation
-    const mh = mouthOpen ? 10 + Math.abs(Math.sin(frame*0.3))*8 : 4;
-    ctx.fillStyle = '#c0392b';
-    ctx.beginPath();
-    ctx.ellipse(cx, cy-24, 14, mh, 0, 0, Math.PI*2);
-    ctx.fill();
-    if(mouthOpen && mh > 6){
-      ctx.fillStyle = '#fff';
-      ctx.fillRect(cx-12, cy-26, 24, 4);
-    }
-    
-    // Arm holding food
-    const armOff = Math.sin(frame*0.15)*8;
-    ctx.strokeStyle = '#FFE0A0';
-    ctx.lineWidth = 10;
-    ctx.lineCap = 'round';
-    ctx.beginPath();
-    ctx.moveTo(cx+40, cy-5);
-    ctx.quadraticCurveTo(cx+70, cy-30+armOff, cx+65, cy-55+armOff);
-    ctx.stroke();
-    
-    // Food item
-    ctx.font = '36px serif';
-    ctx.textAlign = 'center';
-    ctx.fillText(foods[foodIdx], cx+68, cy-55+armOff);
-    
-    // Bite particles
-    if(bite > 0){
-      ctx.fillStyle = 'rgba(255,200,50,.6)';
-      for(let i=0;i<5;i++){
-        ctx.beginPath();
-        ctx.arc(cx+30+i*8, cy-45-bite*3+i*5, 3-i*0.3, 0, Math.PI*2);
-        ctx.fill();
-      }
-      bite--;
-    }
-    
-    // Tummy happiness
-    if(frame%60===0){
-      ctx.fillStyle = 'rgba(255,165,0,.3)';
-      ctx.beginPath();
-      ctx.arc(cx, cy+20, 30, 0, Math.PI*2);
-      ctx.fill();
-    }
-    
-    frame++;
-    if(frame % 40 === 0){ mouthOpen = !mouthOpen; if(!mouthOpen){bite=5; foodIdx=(foodIdx+1)%foods.length;} }
-    
-    requestAnimationFrame(drawChar);
+  let W, H, particles = [], orbs = [];
+
+  function resize(){ W = cv.width = window.innerWidth; H = cv.height = window.innerHeight; }
+  window.addEventListener('resize', resize); resize();
+
+  /* orbes de luz de fundo */
+  for(let i=0;i<4;i++){
+    orbs.push({
+      x: Math.random()*W, y: Math.random()*H,
+      r: 180+Math.random()*220,
+      vx:(Math.random()-.5)*.4, vy:(Math.random()-.5)*.4,
+      hue: 15+Math.random()*30, op:.06+Math.random()*.08
+    });
   }
-  drawChar();
+
+  /* partículas de faísca/food */
+  const foodChars = ['✦','✧','·','•','◦'];
+  function spawnP(){
+    particles.push({
+      x: Math.random()*W, y: H+10,
+      vx:(Math.random()-.5)*1.2, vy:-(0.6+Math.random()*1.4),
+      life:1, decay:.004+Math.random()*.008,
+      size:1+Math.random()*3,
+      hue:10+Math.random()*40, char:foodChars[Math.floor(Math.random()*foodChars.length)]
+    });
+  }
+
+  function draw(){
+    requestAnimationFrame(draw);
+    ctx.clearRect(0,0,W,H);
+
+    /* fundo escuro quente */
+    ctx.fillStyle='#0d0400'; ctx.fillRect(0,0,W,H);
+
+    /* grade sutil */
+    ctx.strokeStyle='rgba(255,80,0,.03)'; ctx.lineWidth=1;
+    const gs=60;
+    for(let x=0;x<W;x+=gs){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
+    for(let y=0;y<H;y+=gs){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+
+    /* orbes */
+    orbs.forEach(o=>{
+      o.x+=o.vx; o.y+=o.vy;
+      if(o.x<-o.r)o.x=W+o.r; if(o.x>W+o.r)o.x=-o.r;
+      if(o.y<-o.r)o.y=H+o.r; if(o.y>H+o.r)o.y=-o.r;
+      const g=ctx.createRadialGradient(o.x,o.y,0,o.x,o.y,o.r);
+      g.addColorStop(0,`hsla(${o.hue},100%,55%,${o.op})`);
+      g.addColorStop(1,'transparent');
+      ctx.fillStyle=g; ctx.beginPath(); ctx.arc(o.x,o.y,o.r,0,Math.PI*2); ctx.fill();
+    });
+
+    /* linha horizontal central brilhante */
+    const ly=H/2;
+    const gl=ctx.createLinearGradient(0,ly,W,ly);
+    gl.addColorStop(0,'transparent');
+    gl.addColorStop(.5,'rgba(255,120,0,.08)');
+    gl.addColorStop(1,'transparent');
+    ctx.fillStyle=gl; ctx.fillRect(0,ly-1,W,2);
+
+    /* partículas flutuantes */
+    if(Math.random()<.35) spawnP();
+    particles.forEach((p,i)=>{
+      p.life-=p.decay; p.x+=p.vx; p.y+=p.vy;
+      if(p.life<=0){particles.splice(i,1);return;}
+      ctx.save();
+      ctx.globalAlpha=p.life*.7;
+      ctx.fillStyle=`hsl(${p.hue},100%,65%)`;
+      ctx.font=`${p.size*6}px serif`;
+      ctx.textAlign='center';
+      ctx.fillText(p.char,p.x,p.y);
+      ctx.restore();
+    });
+
+    /* vinheta */
+    const vg=ctx.createRadialGradient(W/2,H/2,H*.2,W/2,H/2,H*.85);
+    vg.addColorStop(0,'transparent');
+    vg.addColorStop(1,'rgba(0,0,0,.55)');
+    ctx.fillStyle=vg; ctx.fillRect(0,0,W,H);
+  }
+  draw();
 })();
 
 /* ════════════════════════
@@ -828,14 +829,7 @@ function renderCarrinho(){
 
 function checkout(){
   if(!cart.length) return;
-  
-  const lines = cart.map(c=>`• ${c.qty}x ${c.name} — R$ ${(c.price*c.qty).toFixed(2).replace('.',',')}`);
-  const subtotal = cart.reduce((s,c)=>s+c.price*c.qty,0);
-  const msg = `🍔 *Pedido - Lanche 3 Irmãos*\n\n`
-    + lines.join('\n')
-    + `\n\n💰 *Total: R$ ${subtotal.toFixed(2).replace('.',',')}*`
-    + `\n\n📍 Retirada ou entrega?`;
-  
+  const msg = `Olá, lanche 3 irmãos, fiz a anotação online do pedido, poderia informar suas opções de pagamento?`;
   const url = `https://wa.me/${WHATSAPP}?text=${encodeURIComponent(msg)}`;
   window.open(url, '_blank');
 }
