@@ -129,7 +129,7 @@ body{font-family:'Nunito',sans-serif;background:var(--cream);color:var(--text);o
 .btn-whatsapp:hover{background:#1ebe5a;transform:translateY(-2px);box-shadow:0 6px 20px rgba(37,211,102,.35)}
 
 /* ── CART VIEW ── */
-#viewCart{min-height:60vh}
+#viewCarrinho{min-height:60vh}
 .cart-header{display:flex;align-items:center;gap:12px;margin-bottom:24px}
 .cart-header h2{font-family:'Fredoka One',cursive;font-size:2rem;color:var(--text)}
 .cart-empty{text-align:center;padding:60px 20px;color:var(--text3)}
@@ -482,7 +482,6 @@ body{font-family:'Nunito',sans-serif;background:var(--cream);color:var(--text);o
   function resize(){ W = cv.width = window.innerWidth; H = cv.height = window.innerHeight; }
   window.addEventListener('resize', resize); resize();
 
-  /* orbes de luz de fundo */
   for(let i=0;i<4;i++){
     orbs.push({
       x: Math.random()*W, y: Math.random()*H,
@@ -492,7 +491,6 @@ body{font-family:'Nunito',sans-serif;background:var(--cream);color:var(--text);o
     });
   }
 
-  /* partículas de faísca/food */
   const foodChars = ['✦','✧','·','•','◦'];
   function spawnP(){
     particles.push({
@@ -507,17 +505,13 @@ body{font-family:'Nunito',sans-serif;background:var(--cream);color:var(--text);o
   function draw(){
     requestAnimationFrame(draw);
     ctx.clearRect(0,0,W,H);
-
-    /* fundo escuro quente */
     ctx.fillStyle='#0d0400'; ctx.fillRect(0,0,W,H);
 
-    /* grade sutil */
     ctx.strokeStyle='rgba(255,80,0,.03)'; ctx.lineWidth=1;
     const gs=60;
     for(let x=0;x<W;x+=gs){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
     for(let y=0;y<H;y+=gs){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
 
-    /* orbes */
     orbs.forEach(o=>{
       o.x+=o.vx; o.y+=o.vy;
       if(o.x<-o.r)o.x=W+o.r; if(o.x>W+o.r)o.x=-o.r;
@@ -528,7 +522,6 @@ body{font-family:'Nunito',sans-serif;background:var(--cream);color:var(--text);o
       ctx.fillStyle=g; ctx.beginPath(); ctx.arc(o.x,o.y,o.r,0,Math.PI*2); ctx.fill();
     });
 
-    /* linha horizontal central brilhante */
     const ly=H/2;
     const gl=ctx.createLinearGradient(0,ly,W,ly);
     gl.addColorStop(0,'transparent');
@@ -536,7 +529,6 @@ body{font-family:'Nunito',sans-serif;background:var(--cream);color:var(--text);o
     gl.addColorStop(1,'transparent');
     ctx.fillStyle=gl; ctx.fillRect(0,ly-1,W,2);
 
-    /* partículas flutuantes */
     if(Math.random()<.35) spawnP();
     particles.forEach((p,i)=>{
       p.life-=p.decay; p.x+=p.vx; p.y+=p.vy;
@@ -550,7 +542,6 @@ body{font-family:'Nunito',sans-serif;background:var(--cream);color:var(--text);o
       ctx.restore();
     });
 
-    /* vinheta */
     const vg=ctx.createRadialGradient(W/2,H/2,H*.2,W/2,H/2,H*.85);
     vg.addColorStop(0,'transparent');
     vg.addColorStop(1,'rgba(0,0,0,.55)');
@@ -572,51 +563,84 @@ setTimeout(()=>{
 }, 5000);
 
 /* ════════════════════════
+   CONFIG
+════════════════════════ */
+const ADMIN_PASS       = 'ravi2000';
+const WHATSAPP         = '5592988474450';
+const GAS              = 'https://script.google.com/macros/s/AKfycbxaJkQXYLEZ-NoVYNFijneIHJc-brOKaBbr_nnD42uJqxVuKIT7QzpHU1nIoDHps5oHuA/exec';
+const CLOUDINARY_CLOUD = 'drexouifo';
+const CLOUDINARY_PRESET= 'gwjwlvzk';
+
+/* ════════════════════════
    STATE
 ════════════════════════ */
-const ADMIN_PASS = 'ravi2000';
-const WHATSAPP = '5592988474450';
-
-function loadData(){
-  try{ return JSON.parse(localStorage.getItem('l3i_data')||'{}'); }catch(e){return {};}
-}
-function saveData(d){ localStorage.setItem('l3i_data', JSON.stringify(d)); }
-function getData(){
-  const d = loadData();
-  if(!d.groups) d.groups = ['Hambúrgueres','Pizzas','Salgados','Combos','Bebidas'];
-  if(!d.products) d.products = getDefaultProducts();
-  if(!d.loja) d.loja = {
-    telefone:'(92) 9884-74450',
-    whatsapp:'5592988474450',
-    horarioSemana:'11h – 23h',
-    horarioFds:'11h – 00h',
-    instagram:'@lanche3irmaos',
-    facebook:'Lanche 3 Irmãos',
-    tiktok:'',
-    endereco:'Rua Vicente Marques da Silva, 24',
-    cidade:'Manaus – AM',
-    mapLat:'-3.1190275',
-    mapLng:'-60.0217314'
-  };
-  return d;
-}
-function getDefaultProducts(){
-  return [
-    {id:1,name:'X-Burguer Clássico',price:22.90,group:'Hambúrgueres',desc:'Pão brioche, carne 160g, queijo, alface, tomate e molho especial.',img:'',emoji:'🍔'},
-    {id:2,name:'X-Bacon Duplo',price:32.90,group:'Hambúrgueres',desc:'Dois burguers, bacon crocante, queijo cheddar e onion crispy.',img:'',emoji:'🍔'},
-    {id:3,name:'Pizza Margherita',price:38.90,group:'Pizzas',desc:'Molho de tomate artesanal, mussarela e manjericão fresco.',img:'',emoji:'🍕'},
-    {id:4,name:'Pizza Calabresa',price:42.90,group:'Pizzas',desc:'Calabresa fatiada, cebola caramelizada e azeitonas.',img:'',emoji:'🍕'},
-    {id:5,name:'Coxinha',price:6.50,group:'Salgados',desc:'Massa crocante recheada com frango desfiado temperado.',img:'',emoji:'🍗'},
-    {id:6,name:'Combo Família',price:89.90,group:'Combos',desc:'2 X-Burguers + 2 batatas fritas + 2 refris 500ml.',img:'',emoji:'🤝'},
-    {id:7,name:'Coca-Cola 350ml',price:6.00,group:'Bebidas',desc:'Gelada e refrescante.',img:'',emoji:'🥤'},
-    {id:8,name:'Suco Natural 400ml',price:9.00,group:'Bebidas',desc:'Laranja, limão, maracujá ou caju.',img:'',emoji:'🍊'},
-  ];
-}
-
+let AppData = {
+  products: [],
+  groups:   ['Hambúrgueres','Pizzas','Salgados','Combos','Bebidas'],
+  loja: {
+    telefone:'(92) 9884-74450', whatsapp:'5592988474450',
+    horarioSemana:'11h – 23h',  horarioFds:'11h – 00h',
+    instagram:'@lanche3irmaos', facebook:'Lanche 3 Irmãos', tiktok:'',
+    endereco:'Rua Vicente Marques da Silva, 24', cidade:'Manaus – AM',
+    mapLat:'-3.1190275', mapLng:'-60.0217314'
+  }
+};
 let cart = [];
-let currentGroup = 'todos';
-let editingProductId = null;
+let currentGroup    = 'todos';
+let editingProductId= null;
 let currentAdminTab = 'produtos';
+
+/* ════════════════════════
+   GAS — JSONP helper
+════════════════════════ */
+function gasGet(params, cb){
+  const cbName = '_cb_' + Date.now();
+  const s = document.createElement('script');
+  const to = setTimeout(()=>{ delete window[cbName]; s.remove(); cb(null,'timeout'); }, 15000);
+  window[cbName] = data => { clearTimeout(to); delete window[cbName]; s.remove(); cb(data); };
+  params.callback = cbName;
+  s.src = GAS + '?' + new URLSearchParams(params).toString();
+  s.onerror = ()=>{ clearTimeout(to); delete window[cbName]; s.remove(); cb(null,'error'); };
+  document.body.appendChild(s);
+}
+
+function gasPost(payload, cb){
+  fetch(GAS, {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify(payload)
+  })
+  .then(r=>r.json())
+  .then(d=>cb(d))
+  .catch(()=>cb(null));
+}
+
+/* ════════════════════════
+   CARREGAR DADOS DO SHEETS
+════════════════════════ */
+function carregarTudo(onDone){
+  let loaded = 0;
+  const done = ()=>{ loaded++; if(loaded===3) onDone(); };
+
+  gasGet({action:'getProdutos'}, d=>{
+    if(d && d.produtos) AppData.products = d.produtos.map(p=>({
+      id:p.id, name:p.nome, price:parseFloat(p.preco)||0,
+      group:p.grupo, desc:p.desc||'', img:p.img||'',
+      emoji:p.emoji||'🍔', promo:p.promo, oldPrice:parseFloat(p.oldPrice)||0
+    }));
+    done();
+  });
+
+  gasGet({action:'getGrupos'}, d=>{
+    if(d && d.grupos && d.grupos.length) AppData.groups = d.grupos;
+    done();
+  });
+
+  gasGet({action:'getLoja'}, d=>{
+    if(d && d.loja && Object.keys(d.loja).length) AppData.loja = {...AppData.loja, ...d.loja};
+    done();
+  });
+}
 
 /* ════════════════════════
    VIEWS
@@ -624,13 +648,11 @@ let currentAdminTab = 'produtos';
 function showView(name, btnEl){
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
   document.getElementById('view'+name.charAt(0).toUpperCase()+name.slice(1)).classList.add('active');
-  
   document.querySelectorAll('#sidebar .nav-btn').forEach(b=>b.classList.remove('active'));
   if(btnEl) btnEl.classList.add('active');
-  
-  if(name==='cardapio') renderCardapio();
-  if(name==='promocoes') renderPromocoes();
-  if(name==='carrinho') renderCarrinho();
+  if(name==='cardapio')    renderCardapio();
+  if(name==='promocoes')   renderPromocoes();
+  if(name==='carrinho')    renderCarrinho();
   if(name==='localizacao') renderLocalizacao();
 }
 function setMobActive(btn){
@@ -642,7 +664,7 @@ function setMobActive(btn){
    LOCALIZAÇÃO
 ════════════════════════ */
 function renderLocalizacao(){
-  const lj = getData().loja;
+  const lj = AppData.loja;
   const el = document.getElementById('localizacaoContent');
   if(!el) return;
 
@@ -660,7 +682,6 @@ function renderLocalizacao(){
 
   el.innerHTML = `
     <div class="section-title">📍 Onde estamos</div>
-
     <div class="loc-card">
       <h3>🍔 Lanche 3 Irmãos</h3>
       <div class="loc-item">
@@ -688,7 +709,6 @@ function renderLocalizacao(){
         <span>💬</span> Falar no WhatsApp
       </a>
     </div>
-
     <div class="loc-card">
       <h3>📲 Redes Sociais</h3>
       <div class="loc-item">
@@ -707,7 +727,6 @@ function renderLocalizacao(){
       </div>
       ${tiktokRow}
     </div>
-
     <div class="loc-card" style="padding:0;overflow:hidden">
       <div class="map-header">
         <div>
@@ -737,35 +756,41 @@ function renderLocalizacao(){
    CARDÁPIO
 ════════════════════════ */
 function renderCardapio(){
-  const data = getData();
   const tabs = document.getElementById('groupTabs');
   const grid = document.getElementById('productGrid');
-  
-  const groups = ['Todos', ...data.groups];
+
+  if(!AppData.products.length){
+    tabs.innerHTML='';
+    grid.innerHTML=`<div class="empty-state"><div class="es-icon">⏳</div><p>Carregando cardápio...</p></div>`;
+    return;
+  }
+
+  const groups = ['Todos', ...AppData.groups];
   tabs.innerHTML = groups.map(g=>`
-    <button class="gtab${(currentGroup==='todos'&&g==='Todos')||(currentGroup===g)?' active':''}" 
+    <button class="gtab${(currentGroup==='todos'&&g==='Todos')||(currentGroup===g)?' active':''}"
       onclick="filterGroup('${g}')">${g}</button>
   `).join('');
-  
-  const prods = currentGroup==='todos' ? data.products : data.products.filter(p=>p.group===currentGroup);
-  
+
+  const prods = currentGroup==='todos' ? AppData.products : AppData.products.filter(p=>p.group===currentGroup);
+
   if(!prods.length){
     grid.innerHTML=`<div class="empty-state"><div class="es-icon">🍽️</div><p>Nenhum produto neste grupo ainda.</p></div>`;
     return;
   }
-  
+
   grid.innerHTML = prods.map(p=>`
     <div class="product-card">
-      <div class="prod-img">
-        ${p.img ? `<img src="${p.img}" alt="${p.name}" onerror="this.parentNode.innerHTML='<span style=font-size:3rem>${p.emoji||'🍔'}</span>'">`
-                : `<span style="font-size:3rem">${p.emoji||'🍔'}</span>`}
+      <div class="prod-img" data-fb="${p.emoji||'🍔'}">
+        ${p.img
+          ? `<img src="${p.img}" alt="${p.name}" onerror="this.parentNode.innerHTML='<span style=\\'font-size:3rem\\'>${p.emoji||'🍔'}</span>'">`
+          : `<span style="font-size:3rem">${p.emoji||'🍔'}</span>`}
       </div>
       <div class="prod-body">
         <div class="prod-name">${p.name}</div>
         <div class="prod-desc">${p.desc||''}</div>
         <div class="prod-footer">
           <span class="prod-price">R$ ${Number(p.price).toFixed(2).replace('.',',')}</span>
-          <button class="btn-add" onclick="addToCart(${p.id})">
+          <button class="btn-add" onclick="addToCart('${p.id}')">
             <span>+</span> Adicionar
           </button>
         </div>
@@ -781,24 +806,17 @@ function filterGroup(g){
 
 /* ════════════════════════
    PROMOÇÕES
+   CORRIGIDO: código duplicado removido
 ════════════════════════ */
 function renderPromocoes(){
-  const data = getData();
-  const promos = data.products.filter(p=>p.promo);
+  const promos = AppData.products.filter(p=>p.promo);
   const list = document.getElementById('promoList');
-  
+
   if(!promos.length){
-    list.innerHTML = `
-      <div style="grid-column:1/-1">
-        <div class="empty-state">
-          <div class="es-icon">🏷️</div>
-          <p>Nenhuma promoção ativa no momento.</p>
-          <p style="font-size:.8rem;margin-top:8px">Fique de olho — atualizamos sempre!</p>
-        </div>
-      </div>`;
+    list.innerHTML=`<div style="grid-column:1/-1"><div class="empty-state"><div class="es-icon">🏷️</div><p>Nenhuma promoção ativa no momento.</p></div></div>`;
     return;
   }
-  
+
   list.innerHTML = promos.map(p=>`
     <div class="promo-item">
       <div class="pi-emoji">${p.emoji||'🍔'}</div>
@@ -810,7 +828,7 @@ function renderPromocoes(){
           <span class="pi-price">R$ ${Number(p.price).toFixed(2).replace('.',',')}</span>
         </div>
       </div>
-      <button class="btn-add" onclick="addToCart(${p.id})">+ Add</button>
+      <button class="btn-add" onclick="addToCart('${p.id}')">+ Add</button>
     </div>
   `).join('');
 }
@@ -819,26 +837,23 @@ function renderPromocoes(){
    CARRINHO
 ════════════════════════ */
 function addToCart(id){
-  const data = getData();
-  const prod = data.products.find(p=>p.id===id);
+  const prod = AppData.products.find(p=>String(p.id)===String(id));
   if(!prod) return;
-  
-  const existing = cart.find(c=>c.id===id);
+  const existing = cart.find(c=>String(c.id)===String(id));
   if(existing) existing.qty++;
   else cart.push({...prod, qty:1});
-  
   updateCartUI();
   toast(`${prod.name} adicionado! 🎉`,'success');
 }
 
 function removeFromCart(id){
-  cart = cart.filter(c=>c.id!==id);
+  cart = cart.filter(c=>String(c.id)!==String(id));
   updateCartUI();
   if(document.getElementById('viewCarrinho').classList.contains('active')) renderCarrinho();
 }
 
 function changeQty(id, delta){
-  const item = cart.find(c=>c.id===id);
+  const item = cart.find(c=>String(c.id)===String(id));
   if(!item) return;
   item.qty += delta;
   if(item.qty <= 0){ removeFromCart(id); return; }
@@ -849,13 +864,13 @@ function changeQty(id, delta){
 function updateCartUI(){
   const total = cart.reduce((s,c)=>s+c.price*c.qty, 0);
   const count = cart.reduce((s,c)=>s+c.qty, 0);
-  
+
   document.getElementById('sideCartCount').textContent = `${count} ${count===1?'item':'itens'}`;
   document.getElementById('sideCartTotal').textContent = `R$ ${total.toFixed(2).replace('.',',')}`;
-  
+
   const badge = document.getElementById('sideCartBadge');
   const mobBadge = document.getElementById('mobCartBadge');
-  
+
   if(count>0){
     badge.style.display='inline-block'; badge.textContent=count;
     mobBadge.style.display='inline-block'; mobBadge.textContent=count;
@@ -867,7 +882,7 @@ function updateCartUI(){
 
 function renderCarrinho(){
   const el = document.getElementById('cartContent');
-  
+
   if(!cart.length){
     el.innerHTML=`
       <div class="cart-empty">
@@ -880,32 +895,30 @@ function renderCarrinho(){
       </div>`;
     return;
   }
-  
+
   const subtotal = cart.reduce((s,c)=>s+c.price*c.qty, 0);
-  
-  /* Psicologia visual: mostrar o total "camuflado" como valor investido */
+  const avgPerItem = subtotal / cart.reduce((s,c)=>s+c.qty, 0);
+
   const itemsHtml = cart.map(item=>`
     <div class="cart-item">
       <div class="ci-thumb">
-        ${item.img ? `<img src="${item.img}" alt="${item.name}" onerror="this.parentNode.innerHTML='<span style=font-size:2rem>${item.emoji||'🍔'}</span>'">`
-                   : `<span style="font-size:2rem">${item.emoji||'🍔'}</span>`}
+        ${item.img
+          ? `<img src="${item.img}" alt="${item.name}" onerror="this.style.display='none'">`
+          : `<span style="font-size:2rem">${item.emoji||'🍔'}</span>`}
       </div>
       <div class="ci-info">
         <div class="ci-name">${item.name}</div>
         <div class="ci-price">R$ ${(item.price * item.qty).toFixed(2).replace('.',',')}</div>
       </div>
       <div class="ci-qty">
-        <button class="qty-btn" onclick="changeQty(${item.id},-1)">−</button>
+        <button class="qty-btn" onclick="changeQty('${item.id}',-1)">−</button>
         <span class="qty-val">${item.qty}</span>
-        <button class="qty-btn" onclick="changeQty(${item.id},1)">+</button>
+        <button class="qty-btn" onclick="changeQty('${item.id}',1)">+</button>
       </div>
-      <button class="ci-remove" onclick="removeFromCart(${item.id})">🗑️</button>
+      <button class="ci-remove" onclick="removeFromCart('${item.id}')">🗑️</button>
     </div>
   `).join('');
-  
-  /* Valor por item psicologicamente mais atraente que total */
-  const avgPerItem = subtotal / cart.reduce((s,c)=>s+c.qty,0);
-  
+
   el.innerHTML=`
     <div class="cart-items">${itemsHtml}</div>
     <div class="cart-summary">
@@ -1012,7 +1025,6 @@ function renderCarrinho(){
     </div>
   `;
 
-  /* ativa seleção visual dos cards de pagamento */
   document.querySelectorAll('.pay-option input').forEach(radio => {
     radio.addEventListener('change', () => {
       document.querySelectorAll('.pay-option').forEach(o => o.classList.remove('selected'));
@@ -1077,7 +1089,9 @@ function checkLogin(){
   }
 }
 document.getElementById('loginInput').addEventListener('keydown',e=>{if(e.key==='Enter') checkLogin();});
-document.getElementById('loginModal').addEventListener('click',e=>{if(e.target===document.getElementById('loginModal')) document.getElementById('loginModal').classList.remove('open');});
+document.getElementById('loginModal').addEventListener('click',e=>{
+  if(e.target===document.getElementById('loginModal')) document.getElementById('loginModal').classList.remove('open');
+});
 
 /* ════════════════════════
    ADMIN — PAINEL
@@ -1102,20 +1116,21 @@ function switchAdminTab(tab){
 
 function renderAdminTab(tab){
   const el = document.getElementById('adminContent');
-  if(tab==='produtos') el.innerHTML = renderAdminProducts();
-  else if(tab==='grupos') el.innerHTML = renderAdminGroups();
-  else if(tab==='adicionar') el.innerHTML = renderAdminForm();
-  else if(tab==='loja') el.innerHTML = renderAdminLoja();
+  if(tab==='produtos')   el.innerHTML = renderAdminProducts();
+  else if(tab==='grupos')    el.innerHTML = renderAdminGroups();
+  else if(tab==='adicionar'){ el.innerHTML = renderAdminForm(); setupPromoToggle(); }
+  else if(tab==='loja')  el.innerHTML = renderAdminLoja();
 }
 
 function renderAdminProducts(){
-  const data = getData();
-  if(!data.products.length) return `<div class="empty-state"><div class="es-icon">📦</div><p>Nenhum produto cadastrado.</p></div>`;
+  if(!AppData.products.length) return `<div class="empty-state"><div class="es-icon">📦</div><p>Nenhum produto cadastrado.</p></div>`;
   return `<div class="admin-product-list">`+
-    data.products.map(p=>`
+    AppData.products.map(p=>`
       <div class="aprod-item">
         <div class="aprod-thumb">
-          ${p.img?`<img src="${p.img}" alt="${p.name}" onerror="this.innerHTML='${p.emoji||'🍔'}'">`:`${p.emoji||'🍔'}`}
+          ${p.img
+            ? `<img src="${p.img}" alt="${p.name}" onerror="this.parentNode.textContent='${p.emoji||'🍔'}'">`
+            : `${p.emoji||'🍔'}`}
         </div>
         <div class="aprod-info">
           <div class="aprod-name">${p.name}</div>
@@ -1123,22 +1138,20 @@ function renderAdminProducts(){
         </div>
         <div class="aprod-actions">
           <span class="aprod-price">R$ ${Number(p.price).toFixed(2).replace('.',',')}</span>
-          <button class="btn-edit" onclick="editProduct(${p.id})">✏️ Editar</button>
-          <button class="btn-danger" onclick="deleteProduct(${p.id})">🗑️ Remover</button>
+          <button class="btn-edit" onclick="editProduct('${p.id}')">✏️ Editar</button>
+          <button class="btn-danger" onclick="deleteProduct('${p.id}')">🗑️ Remover</button>
         </div>
       </div>
     `).join('')+`</div>`;
 }
 
 function renderAdminGroups(){
-  const data = getData();
   return `
     <div style="margin-bottom:20px">
-      <p style="font-size:.85rem;color:var(--text2);margin-bottom:16px;font-weight:600">Grupos ativos (arraste para reordenar):</p>
+      <p style="font-size:.85rem;color:var(--text2);margin-bottom:16px;font-weight:600">Grupos ativos:</p>
       <div class="group-chips" id="groupChips">
-        ${data.groups.map(g=>`
-          <div class="group-chip">
-            ${g}
+        ${AppData.groups.map(g=>`
+          <div class="group-chip">${g}
             <button class="gchip-del" onclick="deleteGroup('${g}')" title="Remover">✕</button>
           </div>
         `).join('')}
@@ -1155,7 +1168,6 @@ function renderAdminGroups(){
 }
 
 function renderAdminForm(prod){
-  const data = getData();
   const p = prod || {};
   return `
     <form onsubmit="saveProduct(event)" id="adminForm">
@@ -1188,7 +1200,7 @@ function renderAdminForm(prod){
           <label>Grupo *</label>
           <select id="prodGroup" required>
             <option value="">Selecione...</option>
-            ${data.groups.map(g=>`<option value="${g}" ${p.group===g?'selected':''}>${g}</option>`).join('')}
+            ${AppData.groups.map(g=>`<option value="${g}" ${p.group===g?'selected':''}>${g}</option>`).join('')}
           </select>
         </div>
         <div class="form-group">
@@ -1204,10 +1216,7 @@ function renderAdminForm(prod){
       </div>
       <div class="form-row">
         <div class="form-group">
-          <label>
-            <input type="checkbox" id="prodPromo" ${p.promo?'checked':''} style="width:auto;margin-right:6px">
-            Incluir nas Promoções
-          </label>
+          <label><input type="checkbox" id="prodPromo" ${p.promo?'checked':''} style="width:auto;margin-right:6px"> Incluir nas Promoções</label>
         </div>
         <div class="form-group" id="oldPriceBox" style="${p.promo?'':'display:none'}">
           <label>Preço antigo (riscado)</label>
@@ -1219,129 +1228,108 @@ function renderAdminForm(prod){
         ${editingProductId?`<button type="button" onclick="cancelEdit()" style="background:#f3f4f6;border:none;border-radius:10px;padding:12px 20px;cursor:pointer;font-weight:700;font-family:Nunito,sans-serif">Cancelar</button>`:''}
       </div>
     </form>
-    <script>document.getElementById('prodPromo').addEventListener('change',function(){document.getElementById('oldPriceBox').style.display=this.checked?'':'none'})<\/script>
   `;
 }
 
-const CLOUDINARY_CLOUD = 'drexouifo';
-const CLOUDINARY_PRESET = 'gwjwlvzk';
+/* CORRIGIDO: chave extra removida */
+function setupPromoToggle(){
+  const el = document.getElementById('prodPromo');
+  const box = document.getElementById('oldPriceBox');
+  if(el && box) el.addEventListener('change', function(){ box.style.display = this.checked ? '' : 'none'; });
+}
 
 function handleImgUpload(input){
   const file = input.files[0];
   if(!file) return;
-
   document.getElementById('imgPreviewArea').innerHTML =
-    `<div style="font-size:2rem;margin-bottom:8px">⏳</div>
+    `<div style="font-size:2rem">⏳</div>
      <div id="uploadStatus" style="font-size:.82rem;font-weight:700;color:var(--brand)">Enviando imagem... 0%</div>`;
   document.getElementById('prodImg').value = '';
-
-  const formData = new FormData();
-  formData.append('file', file);
-  formData.append('upload_preset', CLOUDINARY_PRESET);
-  formData.append('folder', 'lanche3irmaos');
-
+  const fd = new FormData();
+  fd.append('file', file);
+  fd.append('upload_preset', CLOUDINARY_PRESET);
+  fd.append('folder', 'lanche3irmaos');
   const xhr = new XMLHttpRequest();
   xhr.open('POST', `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/image/upload`);
-
   xhr.upload.onprogress = ev => {
     if(ev.lengthComputable){
-      const pct = Math.round(ev.loaded / ev.total * 100);
+      const pct = Math.round(ev.loaded/ev.total*100);
       const el = document.getElementById('uploadStatus');
       if(el) el.textContent = `Enviando imagem... ${pct}%`;
     }
   };
-
   xhr.onload = () => {
-    if(xhr.status === 200){
-      const res = JSON.parse(xhr.responseText);
-      const url = res.secure_url;
+    if(xhr.status===200){
+      const url = JSON.parse(xhr.responseText).secure_url;
       document.getElementById('prodImg').value = url;
       document.getElementById('imgPreviewArea').innerHTML =
         `<img src="${url}" class="img-preview">
-         <div style="margin-top:8px;font-size:.78rem;font-weight:700;color:var(--green)">✅ Imagem salva no Cloudinary!</div>`;
-    } else {
-      onUploadError('Erro ' + xhr.status);
-    }
+         <div style="margin-top:8px;font-size:.78rem;font-weight:700;color:var(--green)">✅ Imagem salva!</div>`;
+    } else { toast('Erro no upload da imagem.','error'); }
   };
-
-  xhr.onerror = () => onUploadError('Falha na conexão');
-
-  xhr.send(formData);
-
-  function onUploadError(msg){
-    console.error('Cloudinary error:', msg);
-    /* fallback: reduz e salva base64 local */
-    const reader = new FileReader();
-    reader.onload = e => {
-      const img = new Image();
-      img.onload = () => {
-        const MAX = 800;
-        let w = img.width, h = img.height;
-        if(w > MAX || h > MAX){
-          if(w > h){ h = Math.round(h * MAX / w); w = MAX; }
-          else { w = Math.round(w * MAX / h); h = MAX; }
-        }
-        const cv = document.createElement('canvas');
-        cv.width = w; cv.height = h;
-        cv.getContext('2d').drawImage(img, 0, 0, w, h);
-        const compressed = cv.toDataURL('image/jpeg', 0.75);
-        document.getElementById('prodImg').value = compressed;
-        document.getElementById('imgPreviewArea').innerHTML =
-          `<img src="${compressed}" class="img-preview">
-           <div style="margin-top:8px;font-size:.78rem;font-weight:700;color:var(--amber)">⚠️ Salvo localmente (Cloudinary indisponível)</div>`;
-      };
-      img.src = e.target.result;
-    };
-    reader.readAsDataURL(file);
-  }
+  xhr.onerror = () => toast('Falha na conexão com Cloudinary.','error');
+  xhr.send(fd);
 }
 
 function saveProduct(e){
   e.preventDefault();
   const imgVal = document.getElementById('prodImg').value;
-  const data = getData();
+  const btn = e.target.querySelector('[type=submit]');
+  btn.disabled = true; btn.textContent = '⏳ Salvando...';
+
   const prod = {
-    id: editingProductId || Date.now(),
-    name: document.getElementById('prodName').value.trim(),
-    price: parseFloat(document.getElementById('prodPrice').value),
-    group: document.getElementById('prodGroup').value,
-    emoji: document.getElementById('prodEmoji').value.trim() || '🍔',
-    desc: document.getElementById('prodDesc').value.trim(),
-    img: imgVal,
-    promo: document.getElementById('prodPromo').checked,
-    oldPrice: document.getElementById('prodOldPrice') ? parseFloat(document.getElementById('prodOldPrice').value)||0 : 0,
+    id:       String(editingProductId || Date.now()),
+    nome:     document.getElementById('prodName').value.trim(),
+    preco:    parseFloat(document.getElementById('prodPrice').value),
+    grupo:    document.getElementById('prodGroup').value,
+    emoji:    document.getElementById('prodEmoji').value.trim() || '🍔',
+    desc:     document.getElementById('prodDesc').value.trim(),
+    img:      imgVal,
+    promo:    document.getElementById('prodPromo').checked,
+    oldPrice: parseFloat(document.getElementById('prodOldPrice')?.value)||0,
   };
 
-  if(editingProductId){
-    const idx = data.products.findIndex(p=>p.id===editingProductId);
-    if(idx>=0) data.products[idx] = prod;
-    toast('✅ Produto atualizado!','success');
-  } else {
-    data.products.push(prod);
-    toast('✅ Produto cadastrado!','success');
-  }
-
-  saveData(data);
-  editingProductId = null;
-  switchAdminTab('produtos');
+  gasPost({action:'saveProduto', data: prod}, res => {
+    if(res && res.ok){
+      const mapped = {id:prod.id,name:prod.nome,price:prod.preco,group:prod.grupo,
+                      emoji:prod.emoji,desc:prod.desc,img:prod.img,promo:prod.promo,oldPrice:prod.oldPrice};
+      if(editingProductId){
+        const idx = AppData.products.findIndex(p=>String(p.id)===String(editingProductId));
+        if(idx>=0) AppData.products[idx] = mapped; else AppData.products.push(mapped);
+        toast('✅ Produto atualizado!','success');
+      } else {
+        AppData.products.push(mapped);
+        toast('✅ Produto cadastrado!','success');
+      }
+      editingProductId = null;
+      switchAdminTab('produtos');
+    } else {
+      toast('Erro ao salvar. Verifique o GAS.','error');
+      btn.disabled = false;
+      btn.textContent = editingProductId ? '💾 Salvar alterações' : '✅ Cadastrar produto';
+    }
+  });
 }
 
 function editProduct(id){
-  const data = getData();
-  const prod = data.products.find(p=>p.id===id);
+  const prod = AppData.products.find(p=>String(p.id)===String(id));
   if(!prod) return;
   editingProductId = id;
   document.querySelectorAll('.atab')[2].click();
   document.getElementById('adminContent').innerHTML = renderAdminForm(prod);
+  setupPromoToggle();
 }
 
+/* CORRIGIDO: deleteProduto agora via POST (consistente com gasPost) */
 function deleteProduct(id){
   if(!confirm('Remover este produto?')) return;
-  const data = getData();
-  data.products = data.products.filter(p=>p.id!==id);
-  saveData(data);
-  renderAdminTab('produtos');
-  toast('Produto removido.','error');
+  gasPost({action:'deleteProduto', data:{id}}, res=>{
+    if(res && res.ok){
+      AppData.products = AppData.products.filter(p=>String(p.id)!==String(id));
+      renderAdminTab('produtos');
+      toast('Produto removido.','error');
+    } else { toast('Erro ao remover.','error'); }
+  });
 }
 
 function cancelEdit(){
@@ -1351,28 +1339,27 @@ function cancelEdit(){
 
 function addGroup(){
   const input = document.getElementById('newGroupInput');
-  const name = input.value.trim();
+  const name  = input.value.trim();
   if(!name) return;
-  const data = getData();
-  if(data.groups.includes(name)){ toast('Grupo já existe!','error'); return; }
-  data.groups.push(name);
-  saveData(data);
-  input.value = '';
-  renderAdminTab('grupos');
-  toast(`Grupo "${name}" criado!`,'success');
+  if(AppData.groups.includes(name)){ toast('Grupo já existe!','error'); return; }
+  AppData.groups.push(name);
+  gasPost({action:'saveGrupos', data: AppData.groups}, res=>{
+    if(res && res.ok){ input.value=''; renderAdminTab('grupos'); toast(`Grupo "${name}" criado!`,'success'); }
+    else { AppData.groups.pop(); toast('Erro ao salvar grupo.','error'); }
+  });
 }
 
 function deleteGroup(name){
-  if(!confirm(`Remover o grupo "${name}"?\nOs produtos deste grupo não serão deletados.`)) return;
-  const data = getData();
-  data.groups = data.groups.filter(g=>g!==name);
-  saveData(data);
-  renderAdminTab('grupos');
-  toast(`Grupo "${name}" removido.`,'error');
+  if(!confirm(`Remover o grupo "${name}"?`)) return;
+  AppData.groups = AppData.groups.filter(g=>g!==name);
+  gasPost({action:'saveGrupos', data: AppData.groups}, res=>{
+    if(res && res.ok){ renderAdminTab('grupos'); toast(`Grupo "${name}" removido.`,'error'); }
+    else { toast('Erro ao remover grupo.','error'); }
+  });
 }
 
 function renderAdminLoja(){
-  const d = getData().loja;
+  const d = AppData.loja;
   return `
     <form onsubmit="saveLoja(event)">
       <div style="margin-bottom:20px;padding-bottom:16px;border-bottom:2px solid #f5ebe0">
@@ -1454,23 +1441,28 @@ function renderAdminLoja(){
 
 function saveLoja(e){
   e.preventDefault();
-  const data = getData();
-  data.loja = {
-    telefone: document.getElementById('lj_telefone').value.trim(),
-    whatsapp: document.getElementById('lj_whatsapp').value.trim(),
+  const loja = {
+    telefone:      document.getElementById('lj_telefone').value.trim(),
+    whatsapp:      document.getElementById('lj_whatsapp').value.trim(),
     horarioSemana: document.getElementById('lj_horarioSemana').value.trim(),
-    horarioFds: document.getElementById('lj_horarioFds').value.trim(),
-    instagram: document.getElementById('lj_instagram').value.trim(),
-    facebook: document.getElementById('lj_facebook').value.trim(),
-    tiktok: document.getElementById('lj_tiktok').value.trim(),
-    endereco: document.getElementById('lj_endereco').value.trim(),
-    cidade: document.getElementById('lj_cidade').value.trim(),
-    mapLat: document.getElementById('lj_mapLat').value.trim(),
-    mapLng: document.getElementById('lj_mapLng').value.trim(),
+    horarioFds:    document.getElementById('lj_horarioFds').value.trim(),
+    instagram:     document.getElementById('lj_instagram').value.trim(),
+    facebook:      document.getElementById('lj_facebook').value.trim(),
+    tiktok:        document.getElementById('lj_tiktok').value.trim(),
+    endereco:      document.getElementById('lj_endereco').value.trim(),
+    cidade:        document.getElementById('lj_cidade').value.trim(),
+    mapLat:        document.getElementById('lj_mapLat').value.trim(),
+    mapLng:        document.getElementById('lj_mapLng').value.trim(),
   };
-  saveData(data);
-  toast('✅ Informações da loja salvas!','success');
-  renderLocalizacao();
+  gasPost({action:'saveLoja', data: loja}, res=>{
+    if(res && res.ok){
+      AppData.loja = loja;
+      toast('✅ Informações da loja salvas!','success');
+      renderLocalizacao();
+    } else {
+      toast('Erro ao salvar. Verifique o GAS.','error');
+    }
+  });
 }
 
 /* ════════════════════════
@@ -1487,11 +1479,16 @@ function toast(msg, type='ok'){
 /* ════════════════════════
    INIT
 ════════════════════════ */
-setTimeout(()=>{
-  renderCardapio();
-  renderLocalizacao();
-  updateCartUI();
-}, 100);
+(function init(){
+  const grid = document.getElementById('productGrid');
+  if(grid) grid.innerHTML=`<div class="empty-state"><div class="es-icon">⏳</div><p>Carregando cardápio...</p></div>`;
+
+  carregarTudo(()=>{
+    renderCardapio();
+    renderLocalizacao();
+    updateCartUI();
+  });
+})();
 </script>
 </body>
 </html>
