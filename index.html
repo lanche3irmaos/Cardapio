@@ -1,0 +1,1115 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lanche 3 Irmãos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800;900&family=Pacifico&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+--brand:#FF4500;--brand2:#FF6B35;--brand3:#FFB347;
+--dark:#1a0a00;--dark2:#2d1600;--dark3:#3d2200;
+--gold:#FFD700;--cream:#FFF8F0;--white:#FFFFFF;
+--text:#1a0a00;--text2:#5a3a1a;--text3:#8a6a4a;
+--green:#2ecc71;--radius:16px;--shadow:0 8px 32px rgba(255,69,0,.15);
+}
+html{scroll-behavior:smooth}
+body{font-family:'Nunito',sans-serif;background:var(--cream);color:var(--text);overflow-x:hidden;min-height:100vh}
+
+/* ── INTRO SPLASH ── */
+#splash{position:fixed;inset:0;z-index:9999;background:linear-gradient(135deg,#FF4500 0%,#FF6B35 40%,#FFB347 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden}
+#splash .splash-title{font-family:'Fredoka One',cursive;font-size:clamp(2.5rem,8vw,5rem);color:#fff;text-shadow:0 4px 20px rgba(0,0,0,.3);text-align:center;animation:bounceIn .8s both}
+#splash .splash-sub{font-family:'Nunito',sans-serif;font-size:1.1rem;color:rgba(255,255,255,.85);margin-top:.5rem;animation:bounceIn .8s .2s both}
+#splash .splash-bar{width:200px;height:5px;background:rgba(255,255,255,.3);border-radius:10px;margin-top:2rem;overflow:hidden;animation:bounceIn .8s .4s both}
+#splash .splash-fill{height:100%;background:#fff;border-radius:10px;animation:fillBar 4.5s linear forwards}
+#charCanvas{width:220px;height:220px;margin-bottom:1rem}
+@keyframes fillBar{from{width:0}to{width:100%}}
+@keyframes bounceIn{from{opacity:0;transform:scale(.7) translateY(30px)}to{opacity:1;transform:scale(1) translateY(0)}}
+#splash.hide{animation:splashOut .6s forwards}
+@keyframes splashOut{to{opacity:0;transform:scale(1.05);pointer-events:none}}
+
+/* ── LAYOUT ── */
+#app{display:flex;min-height:100vh;opacity:0;transition:opacity .5s}
+#app.visible{opacity:1}
+
+/* ── SIDEBAR ── */
+#sidebar{width:260px;min-height:100vh;background:linear-gradient(180deg,var(--dark) 0%,var(--dark2) 100%);position:sticky;top:0;flex-shrink:0;display:flex;flex-direction:column;z-index:100;box-shadow:4px 0 20px rgba(0,0,0,.3)}
+.sidebar-logo{padding:28px 20px 20px;text-align:center;border-bottom:1px solid rgba(255,255,255,.08)}
+.sidebar-logo .logo-name{font-family:'Fredoka One',cursive;font-size:1.7rem;color:var(--brand3);line-height:1.1}
+.sidebar-logo .logo-tag{font-size:.72rem;color:rgba(255,255,255,.5);letter-spacing:2px;text-transform:uppercase;margin-top:4px}
+.sidebar-logo .logo-flame{font-size:2rem;display:block;animation:flicker 1.5s ease-in-out infinite alternate}
+@keyframes flicker{from{transform:scale(1) rotate(-3deg)}to{transform:scale(1.1) rotate(3deg)}}
+
+.nav-section{padding:8px 12px;font-size:.6rem;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,.3);margin-top:16px;font-weight:700}
+.nav-btn{display:flex;align-items:center;gap:12px;padding:12px 20px;color:rgba(255,255,255,.65);cursor:pointer;border-radius:10px;margin:2px 8px;transition:all .2s;font-weight:600;font-size:.9rem;border:none;background:none;width:calc(100% - 16px);text-align:left}
+.nav-btn:hover{background:rgba(255,255,255,.08);color:#fff}
+.nav-btn.active{background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;box-shadow:0 4px 15px rgba(255,69,0,.4)}
+.nav-btn .nav-icon{font-size:1.2rem;width:24px;text-align:center}
+
+.sidebar-cart{margin:auto 12px 12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:16px;cursor:pointer;transition:all .2s}
+.sidebar-cart:hover{background:rgba(255,107,53,.2);border-color:var(--brand2)}
+.sidebar-cart .cart-title{font-size:.75rem;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:1px}
+.sidebar-cart .cart-count{font-family:'Fredoka One',cursive;font-size:1.6rem;color:var(--brand3)}
+.sidebar-cart .cart-total{font-size:.85rem;color:rgba(255,255,255,.7);margin-top:2px}
+.cart-badge{display:inline-block;background:var(--brand);color:#fff;font-size:.7rem;font-weight:800;width:20px;height:20px;border-radius:50%;text-align:center;line-height:20px;margin-left:6px;animation:pop .3s}
+@keyframes pop{from{transform:scale(0)}to{transform:scale(1)}}
+
+/* ── MAIN ── */
+#main{flex:1;overflow-y:auto}
+
+/* ── VIEWS ── */
+.view{display:none;padding:32px;animation:fadeUp .4s both}
+.view.active{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── HERO ── */
+.hero{background:linear-gradient(135deg,var(--brand) 0%,var(--brand2) 50%,var(--brand3) 100%);border-radius:24px;padding:48px 40px;margin-bottom:32px;position:relative;overflow:hidden;color:#fff}
+.hero::before{content:'';position:absolute;right:-60px;top:-60px;width:250px;height:250px;background:rgba(255,255,255,.08);border-radius:50%}
+.hero::after{content:'';position:absolute;right:40px;bottom:-80px;width:180px;height:180px;background:rgba(255,255,255,.06);border-radius:50%}
+.hero h1{font-family:'Fredoka One',cursive;font-size:clamp(2rem,4vw,3.2rem);line-height:1.1;position:relative;z-index:1}
+.hero p{font-size:1rem;margin-top:.8rem;opacity:.9;position:relative;z-index:1;max-width:400px}
+.hero-badges{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap;position:relative;z-index:1}
+.hero-badge{background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.3);border-radius:20px;padding:4px 14px;font-size:.78rem;font-weight:700;backdrop-filter:blur(4px)}
+
+/* ── GROUP TABS ── */
+.group-tabs{display:flex;gap:8px;margin-bottom:28px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}
+.group-tabs::-webkit-scrollbar{display:none}
+.gtab{padding:10px 20px;border-radius:30px;border:2px solid var(--brand);background:transparent;color:var(--brand);font-weight:700;font-size:.85rem;cursor:pointer;white-space:nowrap;transition:all .2s;font-family:'Nunito',sans-serif}
+.gtab:hover{background:rgba(255,69,0,.08)}
+.gtab.active{background:var(--brand);color:#fff;box-shadow:0 4px 12px rgba(255,69,0,.3)}
+
+/* ── PRODUCT GRID ── */
+.product-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:20px}
+.product-card{background:#fff;border-radius:var(--radius);overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.07);transition:transform .25s,box-shadow .25s;border:1px solid rgba(0,0,0,.05);cursor:pointer}
+.product-card:hover{transform:translateY(-4px);box-shadow:var(--shadow)}
+.product-card .prod-img{width:100%;height:180px;object-fit:cover;background:linear-gradient(135deg,#ffe8d6,#ffd0a8);display:flex;align-items:center;justify-content:center;font-size:4rem}
+.product-card .prod-img img{width:100%;height:100%;object-fit:cover}
+.product-card .prod-body{padding:16px}
+.product-card .prod-name{font-weight:800;font-size:1rem;color:var(--text);margin-bottom:4px}
+.product-card .prod-desc{font-size:.8rem;color:var(--text3);margin-bottom:12px;line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.product-card .prod-footer{display:flex;align-items:center;justify-content:space-between}
+.product-card .prod-price{font-family:'Fredoka One',cursive;font-size:1.4rem;color:var(--brand)}
+.btn-add{background:var(--brand);color:#fff;border:none;border-radius:10px;padding:8px 16px;font-weight:700;font-size:.82rem;cursor:pointer;transition:all .2s;font-family:'Nunito',sans-serif;display:flex;align-items:center;gap:6px}
+.btn-add:hover{background:var(--brand2);transform:scale(1.05)}
+.btn-add:active{transform:scale(.96)}
+
+/* ── PROMO ── */
+.promo-banner{background:linear-gradient(135deg,#FFD700,#FF6B35);border-radius:var(--radius);padding:24px;margin-bottom:20px;color:#fff;display:flex;align-items:center;gap:16px}
+.promo-banner .promo-icon{font-size:3rem;flex-shrink:0}
+.promo-banner h3{font-family:'Fredoka One',cursive;font-size:1.4rem}
+.promo-banner p{font-size:.85rem;opacity:.9;margin-top:4px}
+.promo-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
+.promo-item{background:#fff;border-radius:12px;padding:16px;border:2px solid #FFD700;display:flex;gap:12px;align-items:center}
+.promo-item .pi-emoji{font-size:2.5rem;flex-shrink:0}
+.promo-item .pi-name{font-weight:800;font-size:.95rem}
+.promo-item .pi-desc{font-size:.78rem;color:var(--text3);margin-top:2px}
+.promo-item .pi-price{font-family:'Fredoka One',cursive;font-size:1.2rem;color:var(--brand);margin-top:4px}
+.promo-item .pi-old{font-size:.78rem;color:#999;text-decoration:line-through;margin-right:6px}
+
+/* ── LOCATION ── */
+.loc-card{background:#fff;border-radius:var(--radius);padding:28px;box-shadow:0 2px 12px rgba(0,0,0,.07);margin-bottom:20px}
+.loc-card h3{font-family:'Fredoka One',cursive;font-size:1.4rem;color:var(--brand);margin-bottom:16px}
+.loc-item{display:flex;align-items:flex-start;gap:12px;padding:10px 0;border-bottom:1px solid #f5ebe0}
+.loc-item:last-child{border-bottom:none}
+.loc-icon{font-size:1.4rem;flex-shrink:0;width:32px;text-align:center}
+.loc-text{font-weight:600;font-size:.9rem;color:var(--text)}
+.loc-sub{font-size:.78rem;color:var(--text3);margin-top:2px}
+.btn-whatsapp{display:inline-flex;align-items:center;gap:10px;background:#25D366;color:#fff;padding:14px 28px;border-radius:12px;font-weight:800;font-size:1rem;text-decoration:none;margin-top:12px;transition:all .2s;border:none;cursor:pointer;font-family:'Nunito',sans-serif}
+.btn-whatsapp:hover{background:#1ebe5a;transform:translateY(-2px);box-shadow:0 6px 20px rgba(37,211,102,.35)}
+
+/* ── CART VIEW ── */
+#viewCart{min-height:60vh}
+.cart-header{display:flex;align-items:center;gap:12px;margin-bottom:24px}
+.cart-header h2{font-family:'Fredoka One',cursive;font-size:2rem;color:var(--text)}
+.cart-empty{text-align:center;padding:60px 20px;color:var(--text3)}
+.cart-empty .ce-icon{font-size:5rem;margin-bottom:16px}
+.cart-empty p{font-size:1rem;font-weight:600}
+
+.cart-items{display:flex;flex-direction:column;gap:12px;margin-bottom:24px}
+.cart-item{background:#fff;border-radius:12px;padding:16px;display:flex;align-items:center;gap:14px;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.ci-thumb{width:64px;height:64px;border-radius:10px;object-fit:cover;background:linear-gradient(135deg,#ffe8d6,#ffd0a8);display:flex;align-items:center;justify-content:center;font-size:2rem;flex-shrink:0;overflow:hidden}
+.ci-thumb img{width:100%;height:100%;object-fit:cover}
+.ci-info{flex:1;min-width:0}
+.ci-name{font-weight:800;font-size:.95rem;truncate:ellipsis;overflow:hidden;white-space:nowrap}
+.ci-price{font-family:'Fredoka One',cursive;font-size:1.1rem;color:var(--brand)}
+.ci-qty{display:flex;align-items:center;gap:8px}
+.qty-btn{width:30px;height:30px;border-radius:8px;border:2px solid var(--brand);background:transparent;color:var(--brand);font-weight:900;font-size:1rem;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center}
+.qty-btn:hover{background:var(--brand);color:#fff}
+.qty-val{font-weight:800;font-size:1rem;min-width:24px;text-align:center}
+.ci-remove{background:none;border:none;cursor:pointer;font-size:1.2rem;color:#ddd;transition:color .2s}
+.ci-remove:hover{color:#e74c3c}
+
+.cart-summary{background:#fff;border-radius:16px;padding:24px;box-shadow:0 2px 12px rgba(0,0,0,.08)}
+.summary-row{display:flex;justify-content:space-between;padding:8px 0;font-size:.9rem;color:var(--text2);border-bottom:1px solid #f5ebe0}
+.summary-row.total{border-bottom:none;margin-top:8px;font-size:1.1rem;font-weight:900;color:var(--text)}
+.summary-row.total .sum-price{font-family:'Fredoka One',cursive;font-size:1.6rem;color:var(--brand)}
+.btn-checkout{width:100%;background:linear-gradient(135deg,#25D366,#1ebe5a);color:#fff;border:none;border-radius:14px;padding:18px;font-family:'Fredoka One',cursive;font-size:1.3rem;cursor:pointer;margin-top:16px;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:10px;letter-spacing:.5px}
+.btn-checkout:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(37,211,102,.4)}
+.btn-checkout:disabled{opacity:.5;cursor:not-allowed;transform:none}
+
+/* ── ADMIN PANEL ── */
+#adminPanel{position:fixed;inset:0;z-index:5000;background:rgba(0,0,0,.6);backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;padding:20px}
+#adminPanel.open{display:flex}
+.admin-box{background:#fff;border-radius:20px;width:100%;max-width:820px;max-height:90vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 24px 60px rgba(0,0,0,.3)}
+.admin-header{background:linear-gradient(135deg,var(--dark),var(--dark2));padding:20px 24px;display:flex;align-items:center;justify-content:space-between}
+.admin-header h2{font-family:'Fredoka One',cursive;font-size:1.5rem;color:var(--brand3)}
+.admin-header p{font-size:.78rem;color:rgba(255,255,255,.5);margin-top:2px}
+.admin-close{background:rgba(255,255,255,.1);border:none;color:#fff;width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:1.1rem;transition:background .2s}
+.admin-close:hover{background:rgba(255,69,0,.4)}
+.admin-tabs{display:flex;border-bottom:1px solid #eee;padding:0 20px;background:#fafafa}
+.atab{padding:12px 20px;border-bottom:3px solid transparent;font-weight:700;font-size:.85rem;cursor:pointer;color:#999;transition:all .2s}
+.atab.active{color:var(--brand);border-bottom-color:var(--brand)}
+.admin-content{flex:1;overflow-y:auto;padding:24px}
+
+/* ── ADMIN FORM ── */
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.form-row.full{grid-template-columns:1fr}
+.form-group{display:flex;flex-direction:column;gap:6px}
+.form-group label{font-size:.75rem;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px}
+.form-group input,.form-group select,.form-group textarea{border:2px solid #e5e7eb;border-radius:10px;padding:10px 14px;font-family:'Nunito',sans-serif;font-size:.9rem;transition:border-color .2s;outline:none;background:#fafafa}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--brand);background:#fff}
+.form-group textarea{resize:vertical;min-height:80px}
+
+.img-upload-area{border:2px dashed #e5e7eb;border-radius:12px;padding:24px;text-align:center;cursor:pointer;transition:all .2s;background:#fafafa}
+.img-upload-area:hover{border-color:var(--brand);background:#fff8f5}
+.img-upload-area input{display:none}
+.img-preview{max-width:100%;max-height:140px;border-radius:8px;margin-top:10px;object-fit:cover}
+
+.btn-save{background:var(--brand);color:#fff;border:none;border-radius:10px;padding:12px 28px;font-weight:700;font-size:.9rem;cursor:pointer;transition:all .2s;font-family:'Nunito',sans-serif}
+.btn-save:hover{background:var(--brand2);transform:translateY(-1px)}
+.btn-danger{background:#fee2e2;color:#e74c3c;border:none;border-radius:8px;padding:6px 12px;font-size:.78rem;font-weight:700;cursor:pointer;transition:all .2s;font-family:'Nunito',sans-serif}
+.btn-danger:hover{background:#e74c3c;color:#fff}
+.btn-edit{background:#e0f2fe;color:#0284c7;border:none;border-radius:8px;padding:6px 12px;font-size:.78rem;font-weight:700;cursor:pointer;transition:all .2s;font-family:'Nunito',sans-serif}
+.btn-edit:hover{background:#0284c7;color:#fff}
+
+/* ── ADMIN LIST ── */
+.admin-product-list{display:flex;flex-direction:column;gap:10px}
+.aprod-item{background:#fafafa;border:1px solid #eee;border-radius:10px;padding:14px;display:flex;align-items:center;gap:12px}
+.aprod-thumb{width:50px;height:50px;border-radius:8px;object-fit:cover;background:linear-gradient(135deg,#ffe8d6,#ffd0a8);display:flex;align-items:center;justify-content:center;font-size:1.5rem;flex-shrink:0;overflow:hidden}
+.aprod-thumb img{width:100%;height:100%;object-fit:cover}
+.aprod-info{flex:1;min-width:0}
+.aprod-name{font-weight:800;font-size:.9rem}
+.aprod-meta{font-size:.75rem;color:#999;margin-top:2px}
+.aprod-price{font-family:'Fredoka One',cursive;font-size:1.1rem;color:var(--brand);margin-right:12px}
+.aprod-actions{display:flex;gap:6px;align-items:center}
+
+/* ── ADMIN GROUP ── */
+.group-chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+.group-chip{background:#f3f4f6;border:1px solid #e5e7eb;border-radius:20px;padding:6px 14px;display:flex;align-items:center;gap:8px;font-size:.82rem;font-weight:700}
+.group-chip .gchip-del{background:none;border:none;cursor:pointer;color:#aaa;font-size:.9rem;transition:color .2s}
+.group-chip .gchip-del:hover{color:#e74c3c}
+.add-group-row{display:flex;gap:8px}
+.add-group-row input{flex:1;border:2px solid #e5e7eb;border-radius:8px;padding:8px 12px;font-family:'Nunito',sans-serif;font-size:.88rem;outline:none}
+.add-group-row input:focus{border-color:var(--brand)}
+.btn-addgroup{background:var(--brand);color:#fff;border:none;border-radius:8px;padding:8px 16px;font-weight:700;cursor:pointer;white-space:nowrap;transition:background .2s;font-family:'Nunito',sans-serif;font-size:.85rem}
+.btn-addgroup:hover{background:var(--brand2)}
+
+/* ── LOGIN MODAL ── */
+#loginModal{position:fixed;inset:0;z-index:6000;background:rgba(0,0,0,.7);backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center}
+#loginModal.open{display:flex}
+.login-box{background:#fff;border-radius:20px;padding:36px;width:340px;text-align:center;box-shadow:0 24px 60px rgba(0,0,0,.3)}
+.login-box .lb-icon{font-size:3rem;margin-bottom:12px}
+.login-box h3{font-family:'Fredoka One',cursive;font-size:1.6rem;color:var(--text);margin-bottom:4px}
+.login-box p{font-size:.82rem;color:var(--text3);margin-bottom:20px}
+.login-box input{width:100%;border:2px solid #e5e7eb;border-radius:10px;padding:12px;font-size:1rem;font-family:'Nunito',sans-serif;text-align:center;outline:none;margin-bottom:12px;letter-spacing:4px}
+.login-box input:focus{border-color:var(--brand)}
+.login-box .btn-login{width:100%;background:var(--brand);color:#fff;border:none;border-radius:10px;padding:13px;font-weight:800;font-size:1rem;cursor:pointer;transition:all .2s;font-family:'Nunito',sans-serif}
+.login-box .btn-login:hover{background:var(--brand2)}
+.login-err{color:#e74c3c;font-size:.8rem;margin-top:-6px;margin-bottom:8px;display:none}
+
+/* ── TOAST ── */
+#toast{position:fixed;bottom:24px;right:24px;z-index:9998;display:flex;flex-direction:column;gap:8px}
+.toast-msg{background:var(--dark);color:#fff;padding:12px 20px;border-radius:10px;font-weight:600;font-size:.85rem;animation:toastIn .3s both;box-shadow:0 4px 16px rgba(0,0,0,.3);border-left:4px solid var(--brand)}
+.toast-msg.success{border-left-color:var(--green)}
+.toast-msg.error{border-left-color:#e74c3c}
+@keyframes toastIn{from{opacity:0;transform:translateX(30px)}to{opacity:1;transform:translateX(0)}}
+@keyframes toastOut{to{opacity:0;transform:translateX(30px)}}
+
+/* ── MOBILE ── */
+#mobileNav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:200;background:var(--dark);padding:8px 0 12px;border-top:1px solid rgba(255,255,255,.1)}
+#mobileHeader{display:none;background:linear-gradient(135deg,var(--dark),var(--dark2));padding:14px 20px;position:sticky;top:0;z-index:200;box-shadow:0 2px 10px rgba(0,0,0,.2)}
+#mobileHeader .mh-title{font-family:'Fredoka One',cursive;font-size:1.4rem;color:var(--brand3)}
+#mobileHeader .mh-row{display:flex;align-items:center;justify-content:space-between}
+.mob-nav-btn{display:flex;flex-direction:column;align-items:center;gap:3px;flex:1;background:none;border:none;color:rgba(255,255,255,.5);cursor:pointer;padding:6px;font-size:.6rem;font-weight:700;font-family:'Nunito',sans-serif;transition:color .2s}
+.mob-nav-btn .mni{font-size:1.3rem}
+.mob-nav-btn.active{color:var(--brand3)}
+
+/* ── EMPTY STATE ── */
+.empty-state{text-align:center;padding:60px 20px;color:var(--text3)}
+.empty-state .es-icon{font-size:4rem;margin-bottom:12px}
+.empty-state p{font-weight:600}
+
+/* ── SECTION TITLE ── */
+.section-title{font-family:'Fredoka One',cursive;font-size:1.5rem;color:var(--text);margin-bottom:20px;display:flex;align-items:center;gap:10px}
+
+/* ── ADMIN GEAR BUTTON ── */
+#adminBtn{position:fixed;bottom:24px;left:24px;z-index:300;background:var(--dark);color:rgba(255,255,255,.6);border:1px solid rgba(255,255,255,.15);border-radius:12px;padding:10px 14px;font-size:.75rem;font-weight:700;cursor:pointer;transition:all .2s;font-family:'Nunito',sans-serif;display:flex;align-items:center;gap:6px}
+#adminBtn:hover{color:#fff;border-color:var(--brand);background:var(--dark2)}
+
+/* ── FOOD ANIMATION ── */
+.food-float{display:inline-block;animation:foodFloat 3s ease-in-out infinite}
+@keyframes foodFloat{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-12px) rotate(3deg)}}
+
+@media(max-width:768px){
+  #sidebar{display:none}
+  #mobileNav{display:flex}
+  #mobileHeader{display:block}
+  #main{padding-bottom:70px}
+  .view{padding:16px}
+  .hero{padding:28px 20px}
+  .product-grid{grid-template-columns:repeat(auto-fill,minmax(160px,1fr))}
+  .form-row{grid-template-columns:1fr}
+  #adminBtn{bottom:80px}
+}
+</style>
+</head>
+<body>
+
+<!-- SPLASH SCREEN -->
+<div id="splash">
+  <canvas id="charCanvas"></canvas>
+  <div class="splash-title">🍔 Lanche 3 Irmãos</div>
+  <div class="splash-sub">Sabor que une família!</div>
+  <div class="splash-bar"><div class="splash-fill"></div></div>
+</div>
+
+<!-- LOGIN MODAL -->
+<div id="loginModal">
+  <div class="login-box">
+    <div class="lb-icon">🔐</div>
+    <h3>Painel Admin</h3>
+    <p>Digite a senha para acessar</p>
+    <div class="login-err" id="loginErr">Senha incorreta!</div>
+    <input type="password" id="loginInput" placeholder="••••••••" maxlength="20">
+    <button class="btn-login" onclick="checkLogin()">Entrar</button>
+  </div>
+</div>
+
+<!-- ADMIN PANEL -->
+<div id="adminPanel">
+  <div class="admin-box">
+    <div class="admin-header">
+      <div>
+        <h2>⚙️ Painel Administrativo</h2>
+        <p>Lanche 3 Irmãos — Gestão de cardápio</p>
+      </div>
+      <button class="admin-close" onclick="closeAdmin()">✕</button>
+    </div>
+    <div class="admin-tabs">
+      <div class="atab active" onclick="switchAdminTab('produtos')">Produtos</div>
+      <div class="atab" onclick="switchAdminTab('grupos')">Grupos</div>
+      <div class="atab" onclick="switchAdminTab('adicionar')">+ Adicionar</div>
+    </div>
+    <div class="admin-content" id="adminContent"></div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<!-- ADMIN BTN -->
+<button id="adminBtn" onclick="openLoginModal()">⚙ Admin</button>
+
+<!-- APP -->
+<div id="app">
+
+  <!-- SIDEBAR -->
+  <nav id="sidebar">
+    <div class="sidebar-logo">
+      <span class="logo-flame">🍔</span>
+      <div class="logo-name">3 Irmãos</div>
+      <div class="logo-tag">Lanchonete</div>
+    </div>
+    <div class="nav-section">Menu</div>
+    <button class="nav-btn active" onclick="showView('cardapio',this)">
+      <span class="nav-icon">🍽️</span> Cardápio
+    </button>
+    <button class="nav-btn" onclick="showView('promocoes',this)">
+      <span class="nav-icon">🏷️</span> Promoções
+    </button>
+    <button class="nav-btn" onclick="showView('localizacao',this)">
+      <span class="nav-icon">📍</span> Localização &amp; Contato
+    </button>
+    <div class="nav-section">Compras</div>
+    <button class="nav-btn" onclick="showView('carrinho',this)">
+      <span class="nav-icon">🛒</span> Carrinho
+      <span id="sideCartBadge" class="cart-badge" style="display:none">0</span>
+    </button>
+    <div class="sidebar-cart" onclick="showView('carrinho',null)">
+      <div class="cart-title">Seu pedido</div>
+      <div class="cart-count" id="sideCartCount">0 itens</div>
+      <div class="cart-total" id="sideCartTotal">R$ 0,00</div>
+    </div>
+  </nav>
+
+  <!-- MAIN -->
+  <div id="main">
+
+    <!-- MOBILE HEADER -->
+    <div id="mobileHeader">
+      <div class="mh-row">
+        <span class="mh-title">🍔 3 Irmãos</span>
+        <button class="nav-btn" style="width:auto;padding:8px 12px;margin:0" onclick="showView('carrinho',null)">
+          🛒 <span id="mobCartBadge" class="cart-badge" style="display:none">0</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- VIEW CARDAPIO -->
+    <div class="view active" id="viewCardapio">
+      <div class="hero">
+        <h1>Fome de verdade? <br>A gente resolve! 🔥</h1>
+        <p>Os melhores lanches de Manaus, feitos com amor e ingredientes frescos.</p>
+        <div class="hero-badges">
+          <span class="hero-badge">⚡ Entrega rápida</span>
+          <span class="hero-badge">❤️ Feito na hora</span>
+          <span class="hero-badge">🏆 Qualidade premium</span>
+        </div>
+      </div>
+      <div id="groupTabs" class="group-tabs"></div>
+      <div id="productGrid" class="product-grid"></div>
+    </div>
+
+    <!-- VIEW PROMOÇÕES -->
+    <div class="view" id="viewPromocoes">
+      <div class="promo-banner">
+        <div class="promo-icon">🏷️</div>
+        <div>
+          <h3>Ofertas Imperdíveis!</h3>
+          <p>Promoções especiais todos os dias. Aproveite enquanto dura!</p>
+        </div>
+      </div>
+      <div id="promoList" class="promo-list"></div>
+    </div>
+
+    <!-- VIEW LOCALIZAÇÃO -->
+    <div class="view" id="viewLocalizacao">
+      <div class="section-title">📍 Onde estamos</div>
+      <div class="loc-card">
+        <h3>🍔 Lanche 3 Irmãos</h3>
+        <div class="loc-item">
+          <span class="loc-icon">🏠</span>
+          <div>
+            <div class="loc-text">Rua Vicente Marques da Silva, 24</div>
+            <div class="loc-sub">Manaus – AM</div>
+          </div>
+        </div>
+        <div class="loc-item">
+          <span class="loc-icon">🕐</span>
+          <div>
+            <div class="loc-text">Seg a Sex: 11h – 23h</div>
+            <div class="loc-sub">Sab e Dom: 11h – 00h</div>
+          </div>
+        </div>
+        <div class="loc-item">
+          <span class="loc-icon">📞</span>
+          <div>
+            <div class="loc-text">(92) 9884-74450</div>
+            <div class="loc-sub">WhatsApp disponível</div>
+          </div>
+        </div>
+        <a class="btn-whatsapp" href="https://wa.me/5592988474450" target="_blank">
+          <span>💬</span> Falar no WhatsApp
+        </a>
+      </div>
+      <div class="loc-card">
+        <h3>📲 Redes Sociais</h3>
+        <div class="loc-item">
+          <span class="loc-icon">📱</span>
+          <div>
+            <div class="loc-text">Instagram</div>
+            <div class="loc-sub">@lanche3irmaos</div>
+          </div>
+        </div>
+        <div class="loc-item">
+          <span class="loc-icon">👍</span>
+          <div>
+            <div class="loc-text">Facebook</div>
+            <div class="loc-sub">Lanche 3 Irmãos</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- VIEW CARRINHO -->
+    <div class="view" id="viewCarrinho">
+      <div class="cart-header">
+        <span style="font-size:2rem">🛒</span>
+        <h2>Seu Pedido</h2>
+      </div>
+      <div id="cartContent"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- MOBILE NAV -->
+<div id="mobileNav">
+  <button class="mob-nav-btn active" onclick="showView('cardapio',null);setMobActive(this)">
+    <span class="mni">🍽️</span><span>Cardápio</span>
+  </button>
+  <button class="mob-nav-btn" onclick="showView('promocoes',null);setMobActive(this)">
+    <span class="mni">🏷️</span><span>Promoções</span>
+  </button>
+  <button class="mob-nav-btn" onclick="showView('localizacao',null);setMobActive(this)">
+    <span class="mni">📍</span><span>Contato</span>
+  </button>
+  <button class="mob-nav-btn" onclick="showView('carrinho',null);setMobActive(this)">
+    <span class="mni">🛒</span><span>Carrinho</span>
+  </button>
+</div>
+
+<script>
+/* ════════════════════════
+   SPLASH — personagem animado
+════════════════════════ */
+(function(){
+  const cv = document.getElementById('charCanvas');
+  const ctx = cv.getContext('2d');
+  cv.width = 220; cv.height = 220;
+  
+  const foods = ['🍔','🥤','🍟','🌭','🍕'];
+  let frame = 0, foodIdx = 0, bite = 0, mouthOpen = false;
+  
+  function drawChar(){
+    ctx.clearRect(0,0,220,220);
+    const cx = 110, cy = 115;
+    
+    // Body
+    ctx.fillStyle = '#FFD700';
+    ctx.beginPath();
+    ctx.ellipse(cx, cy+20, 45, 55, 0, 0, Math.PI*2);
+    ctx.fill();
+    
+    // Head
+    ctx.fillStyle = '#FFE0A0';
+    ctx.beginPath();
+    ctx.arc(cx, cy-40, 42, 0, Math.PI*2);
+    ctx.fill();
+    
+    // Hair
+    ctx.fillStyle = '#8B4513';
+    ctx.beginPath();
+    ctx.arc(cx, cy-72, 28, Math.PI, 0);
+    ctx.fill();
+    
+    // Eyes
+    const eyeOff = Math.sin(frame*0.12)*2;
+    ctx.fillStyle = '#222';
+    ctx.beginPath(); ctx.arc(cx-14, cy-44+eyeOff, 5, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(cx+14, cy-44+eyeOff, 5, 0, Math.PI*2); ctx.fill();
+    
+    // Eye shine
+    ctx.fillStyle = '#fff';
+    ctx.beginPath(); ctx.arc(cx-12, cy-46+eyeOff, 2, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(cx+16, cy-46+eyeOff, 2, 0, Math.PI*2); ctx.fill();
+    
+    // Cheeks
+    ctx.fillStyle = 'rgba(255,100,100,.3)';
+    ctx.beginPath(); ctx.ellipse(cx-22, cy-36, 8, 6, 0, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(cx+22, cy-36, 8, 6, 0, 0, Math.PI*2); ctx.fill();
+    
+    // Mouth - chewing animation
+    const mh = mouthOpen ? 10 + Math.abs(Math.sin(frame*0.3))*8 : 4;
+    ctx.fillStyle = '#c0392b';
+    ctx.beginPath();
+    ctx.ellipse(cx, cy-24, 14, mh, 0, 0, Math.PI*2);
+    ctx.fill();
+    if(mouthOpen && mh > 6){
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(cx-12, cy-26, 24, 4);
+    }
+    
+    // Arm holding food
+    const armOff = Math.sin(frame*0.15)*8;
+    ctx.strokeStyle = '#FFE0A0';
+    ctx.lineWidth = 10;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(cx+40, cy-5);
+    ctx.quadraticCurveTo(cx+70, cy-30+armOff, cx+65, cy-55+armOff);
+    ctx.stroke();
+    
+    // Food item
+    ctx.font = '36px serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(foods[foodIdx], cx+68, cy-55+armOff);
+    
+    // Bite particles
+    if(bite > 0){
+      ctx.fillStyle = 'rgba(255,200,50,.6)';
+      for(let i=0;i<5;i++){
+        ctx.beginPath();
+        ctx.arc(cx+30+i*8, cy-45-bite*3+i*5, 3-i*0.3, 0, Math.PI*2);
+        ctx.fill();
+      }
+      bite--;
+    }
+    
+    // Tummy happiness
+    if(frame%60===0){
+      ctx.fillStyle = 'rgba(255,165,0,.3)';
+      ctx.beginPath();
+      ctx.arc(cx, cy+20, 30, 0, Math.PI*2);
+      ctx.fill();
+    }
+    
+    frame++;
+    if(frame % 40 === 0){ mouthOpen = !mouthOpen; if(!mouthOpen){bite=5; foodIdx=(foodIdx+1)%foods.length;} }
+    
+    requestAnimationFrame(drawChar);
+  }
+  drawChar();
+})();
+
+/* ════════════════════════
+   SPLASH TIMER
+════════════════════════ */
+setTimeout(()=>{
+  const sp = document.getElementById('splash');
+  sp.classList.add('hide');
+  setTimeout(()=>{
+    sp.style.display='none';
+    document.getElementById('app').classList.add('visible');
+  }, 600);
+}, 5000);
+
+/* ════════════════════════
+   STATE
+════════════════════════ */
+const ADMIN_PASS = 'ravi2000';
+const WHATSAPP = '5592988474450';
+
+function loadData(){
+  try{ return JSON.parse(localStorage.getItem('l3i_data')||'{}'); }catch(e){return {};}
+}
+function saveData(d){ localStorage.setItem('l3i_data', JSON.stringify(d)); }
+function getData(){
+  const d = loadData();
+  if(!d.groups) d.groups = ['Hambúrgueres','Pizzas','Salgados','Combos','Bebidas'];
+  if(!d.products) d.products = getDefaultProducts();
+  return d;
+}
+function getDefaultProducts(){
+  return [
+    {id:1,name:'X-Burguer Clássico',price:22.90,group:'Hambúrgueres',desc:'Pão brioche, carne 160g, queijo, alface, tomate e molho especial.',img:'',emoji:'🍔'},
+    {id:2,name:'X-Bacon Duplo',price:32.90,group:'Hambúrgueres',desc:'Dois burguers, bacon crocante, queijo cheddar e onion crispy.',img:'',emoji:'🍔'},
+    {id:3,name:'Pizza Margherita',price:38.90,group:'Pizzas',desc:'Molho de tomate artesanal, mussarela e manjericão fresco.',img:'',emoji:'🍕'},
+    {id:4,name:'Pizza Calabresa',price:42.90,group:'Pizzas',desc:'Calabresa fatiada, cebola caramelizada e azeitonas.',img:'',emoji:'🍕'},
+    {id:5,name:'Coxinha',price:6.50,group:'Salgados',desc:'Massa crocante recheada com frango desfiado temperado.',img:'',emoji:'🍗'},
+    {id:6,name:'Combo Família',price:89.90,group:'Combos',desc:'2 X-Burguers + 2 batatas fritas + 2 refris 500ml.',img:'',emoji:'🤝'},
+    {id:7,name:'Coca-Cola 350ml',price:6.00,group:'Bebidas',desc:'Gelada e refrescante.',img:'',emoji:'🥤'},
+    {id:8,name:'Suco Natural 400ml',price:9.00,group:'Bebidas',desc:'Laranja, limão, maracujá ou caju.',img:'',emoji:'🍊'},
+  ];
+}
+
+let cart = [];
+let currentGroup = 'todos';
+let editingProductId = null;
+let currentAdminTab = 'produtos';
+
+/* ════════════════════════
+   VIEWS
+════════════════════════ */
+function showView(name, btnEl){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('view'+name.charAt(0).toUpperCase()+name.slice(1)).classList.add('active');
+  
+  document.querySelectorAll('#sidebar .nav-btn').forEach(b=>b.classList.remove('active'));
+  if(btnEl) btnEl.classList.add('active');
+  
+  if(name==='cardapio') renderCardapio();
+  if(name==='promocoes') renderPromocoes();
+  if(name==='carrinho') renderCarrinho();
+}
+function setMobActive(btn){
+  document.querySelectorAll('.mob-nav-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+/* ════════════════════════
+   CARDÁPIO
+════════════════════════ */
+function renderCardapio(){
+  const data = getData();
+  const tabs = document.getElementById('groupTabs');
+  const grid = document.getElementById('productGrid');
+  
+  const groups = ['Todos', ...data.groups];
+  tabs.innerHTML = groups.map(g=>`
+    <button class="gtab${(currentGroup==='todos'&&g==='Todos')||(currentGroup===g)?' active':''}" 
+      onclick="filterGroup('${g}')">${g}</button>
+  `).join('');
+  
+  const prods = currentGroup==='todos' ? data.products : data.products.filter(p=>p.group===currentGroup);
+  
+  if(!prods.length){
+    grid.innerHTML=`<div class="empty-state"><div class="es-icon">🍽️</div><p>Nenhum produto neste grupo ainda.</p></div>`;
+    return;
+  }
+  
+  grid.innerHTML = prods.map(p=>`
+    <div class="product-card">
+      <div class="prod-img">
+        ${p.img ? `<img src="${p.img}" alt="${p.name}" onerror="this.parentNode.innerHTML='<span style=font-size:3rem>${p.emoji||'🍔'}</span>'">`
+                : `<span style="font-size:3rem">${p.emoji||'🍔'}</span>`}
+      </div>
+      <div class="prod-body">
+        <div class="prod-name">${p.name}</div>
+        <div class="prod-desc">${p.desc||''}</div>
+        <div class="prod-footer">
+          <span class="prod-price">R$ ${Number(p.price).toFixed(2).replace('.',',')}</span>
+          <button class="btn-add" onclick="addToCart(${p.id})">
+            <span>+</span> Adicionar
+          </button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function filterGroup(g){
+  currentGroup = g==='Todos' ? 'todos' : g;
+  renderCardapio();
+}
+
+/* ════════════════════════
+   PROMOÇÕES
+════════════════════════ */
+function renderPromocoes(){
+  const data = getData();
+  const promos = data.products.filter(p=>p.promo);
+  const list = document.getElementById('promoList');
+  
+  if(!promos.length){
+    list.innerHTML = `
+      <div style="grid-column:1/-1">
+        <div class="empty-state">
+          <div class="es-icon">🏷️</div>
+          <p>Nenhuma promoção ativa no momento.</p>
+          <p style="font-size:.8rem;margin-top:8px">Fique de olho — atualizamos sempre!</p>
+        </div>
+      </div>`;
+    return;
+  }
+  
+  list.innerHTML = promos.map(p=>`
+    <div class="promo-item">
+      <div class="pi-emoji">${p.emoji||'🍔'}</div>
+      <div style="flex:1">
+        <div class="pi-name">${p.name}</div>
+        <div class="pi-desc">${p.desc||''}</div>
+        <div>
+          ${p.oldPrice?`<span class="pi-old">R$ ${Number(p.oldPrice).toFixed(2).replace('.',',')}</span>`:''}
+          <span class="pi-price">R$ ${Number(p.price).toFixed(2).replace('.',',')}</span>
+        </div>
+      </div>
+      <button class="btn-add" onclick="addToCart(${p.id})">+ Add</button>
+    </div>
+  `).join('');
+}
+
+/* ════════════════════════
+   CARRINHO
+════════════════════════ */
+function addToCart(id){
+  const data = getData();
+  const prod = data.products.find(p=>p.id===id);
+  if(!prod) return;
+  
+  const existing = cart.find(c=>c.id===id);
+  if(existing) existing.qty++;
+  else cart.push({...prod, qty:1});
+  
+  updateCartUI();
+  toast(`${prod.name} adicionado! 🎉`,'success');
+}
+
+function removeFromCart(id){
+  cart = cart.filter(c=>c.id!==id);
+  updateCartUI();
+  if(document.getElementById('viewCarrinho').classList.contains('active')) renderCarrinho();
+}
+
+function changeQty(id, delta){
+  const item = cart.find(c=>c.id===id);
+  if(!item) return;
+  item.qty += delta;
+  if(item.qty <= 0){ removeFromCart(id); return; }
+  updateCartUI();
+  if(document.getElementById('viewCarrinho').classList.contains('active')) renderCarrinho();
+}
+
+function updateCartUI(){
+  const total = cart.reduce((s,c)=>s+c.price*c.qty, 0);
+  const count = cart.reduce((s,c)=>s+c.qty, 0);
+  
+  document.getElementById('sideCartCount').textContent = `${count} ${count===1?'item':'itens'}`;
+  document.getElementById('sideCartTotal').textContent = `R$ ${total.toFixed(2).replace('.',',')}`;
+  
+  const badge = document.getElementById('sideCartBadge');
+  const mobBadge = document.getElementById('mobCartBadge');
+  
+  if(count>0){
+    badge.style.display='inline-block'; badge.textContent=count;
+    mobBadge.style.display='inline-block'; mobBadge.textContent=count;
+  } else {
+    badge.style.display='none';
+    mobBadge.style.display='none';
+  }
+}
+
+function renderCarrinho(){
+  const el = document.getElementById('cartContent');
+  
+  if(!cart.length){
+    el.innerHTML=`
+      <div class="cart-empty">
+        <div class="ce-icon food-float">🛒</div>
+        <p>Seu carrinho está vazio</p>
+        <p style="font-size:.8rem;margin-top:8px;opacity:.6">Adicione itens do cardápio</p>
+        <button onclick="showView('cardapio',null)" style="margin-top:20px;background:var(--brand);color:#fff;border:none;border-radius:10px;padding:12px 24px;font-weight:700;cursor:pointer;font-family:Nunito,sans-serif">
+          Ver Cardápio 🍔
+        </button>
+      </div>`;
+    return;
+  }
+  
+  const subtotal = cart.reduce((s,c)=>s+c.price*c.qty, 0);
+  
+  /* Psicologia visual: mostrar o total "camuflado" como valor investido */
+  const itemsHtml = cart.map(item=>`
+    <div class="cart-item">
+      <div class="ci-thumb">
+        ${item.img ? `<img src="${item.img}" alt="${item.name}" onerror="this.parentNode.innerHTML='<span style=font-size:2rem>${item.emoji||'🍔'}</span>'">`
+                   : `<span style="font-size:2rem">${item.emoji||'🍔'}</span>`}
+      </div>
+      <div class="ci-info">
+        <div class="ci-name">${item.name}</div>
+        <div class="ci-price">R$ ${(item.price * item.qty).toFixed(2).replace('.',',')}</div>
+      </div>
+      <div class="ci-qty">
+        <button class="qty-btn" onclick="changeQty(${item.id},-1)">−</button>
+        <span class="qty-val">${item.qty}</span>
+        <button class="qty-btn" onclick="changeQty(${item.id},1)">+</button>
+      </div>
+      <button class="ci-remove" onclick="removeFromCart(${item.id})">🗑️</button>
+    </div>
+  `).join('');
+  
+  /* Valor por item psicologicamente mais atraente que total */
+  const avgPerItem = subtotal / cart.reduce((s,c)=>s+c.qty,0);
+  
+  el.innerHTML=`
+    <div class="cart-items">${itemsHtml}</div>
+    <div class="cart-summary">
+      ${cart.map(c=>`
+        <div class="summary-row">
+          <span>${c.qty}× ${c.name}</span>
+          <span style="font-weight:700">R$ ${(c.price*c.qty).toFixed(2).replace('.',',')}</span>
+        </div>
+      `).join('')}
+      <div class="summary-row" style="padding-top:12px;border-top:2px dashed #f5ebe0;margin-top:4px">
+        <span style="color:var(--text3);font-size:.82rem">Média por item</span>
+        <span style="color:var(--green);font-weight:700">R$ ${avgPerItem.toFixed(2).replace('.',',')}</span>
+      </div>
+      <div class="summary-row total">
+        <span>Total do pedido</span>
+        <span class="sum-price">R$ ${subtotal.toFixed(2).replace('.',',')}</span>
+      </div>
+      <button class="btn-checkout" onclick="checkout()">
+        💬 Fechar pedido com a loja
+      </button>
+    </div>
+  `;
+}
+
+function checkout(){
+  if(!cart.length) return;
+  
+  const lines = cart.map(c=>`• ${c.qty}x ${c.name} — R$ ${(c.price*c.qty).toFixed(2).replace('.',',')}`);
+  const subtotal = cart.reduce((s,c)=>s+c.price*c.qty,0);
+  const msg = `🍔 *Pedido - Lanche 3 Irmãos*\n\n`
+    + lines.join('\n')
+    + `\n\n💰 *Total: R$ ${subtotal.toFixed(2).replace('.',',')}*`
+    + `\n\n📍 Retirada ou entrega?`;
+  
+  const url = `https://wa.me/${WHATSAPP}?text=${encodeURIComponent(msg)}`;
+  window.open(url, '_blank');
+}
+
+/* ════════════════════════
+   ADMIN — LOGIN
+════════════════════════ */
+function openLoginModal(){
+  document.getElementById('loginModal').classList.add('open');
+  document.getElementById('loginInput').value='';
+  document.getElementById('loginErr').style.display='none';
+  setTimeout(()=>document.getElementById('loginInput').focus(),100);
+}
+function checkLogin(){
+  const val = document.getElementById('loginInput').value;
+  if(val===ADMIN_PASS){
+    document.getElementById('loginModal').classList.remove('open');
+    openAdmin();
+  } else {
+    document.getElementById('loginErr').style.display='block';
+    document.getElementById('loginInput').value='';
+    document.getElementById('loginInput').focus();
+  }
+}
+document.getElementById('loginInput').addEventListener('keydown',e=>{if(e.key==='Enter') checkLogin();});
+document.getElementById('loginModal').addEventListener('click',e=>{if(e.target===document.getElementById('loginModal')) document.getElementById('loginModal').classList.remove('open');});
+
+/* ════════════════════════
+   ADMIN — PAINEL
+════════════════════════ */
+function openAdmin(){
+  document.getElementById('adminPanel').classList.add('open');
+  renderAdminTab(currentAdminTab);
+}
+function closeAdmin(){
+  document.getElementById('adminPanel').classList.remove('open');
+  renderCardapio();
+  renderPromocoes();
+}
+
+function switchAdminTab(tab){
+  currentAdminTab = tab;
+  editingProductId = null;
+  document.querySelectorAll('.atab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.atab')[['produtos','grupos','adicionar'].indexOf(tab)].classList.add('active');
+  renderAdminTab(tab);
+}
+
+function renderAdminTab(tab){
+  const el = document.getElementById('adminContent');
+  if(tab==='produtos') el.innerHTML = renderAdminProducts();
+  else if(tab==='grupos') el.innerHTML = renderAdminGroups();
+  else if(tab==='adicionar') el.innerHTML = renderAdminForm();
+}
+
+function renderAdminProducts(){
+  const data = getData();
+  if(!data.products.length) return `<div class="empty-state"><div class="es-icon">📦</div><p>Nenhum produto cadastrado.</p></div>`;
+  return `<div class="admin-product-list">`+
+    data.products.map(p=>`
+      <div class="aprod-item">
+        <div class="aprod-thumb">
+          ${p.img?`<img src="${p.img}" alt="${p.name}" onerror="this.innerHTML='${p.emoji||'🍔'}'">`:`${p.emoji||'🍔'}`}
+        </div>
+        <div class="aprod-info">
+          <div class="aprod-name">${p.name}</div>
+          <div class="aprod-meta">${p.group} — R$ ${Number(p.price).toFixed(2).replace('.',',')} ${p.promo?'🏷️ PROMO':''}</div>
+        </div>
+        <div class="aprod-actions">
+          <span class="aprod-price">R$ ${Number(p.price).toFixed(2).replace('.',',')}</span>
+          <button class="btn-edit" onclick="editProduct(${p.id})">✏️ Editar</button>
+          <button class="btn-danger" onclick="deleteProduct(${p.id})">🗑️ Remover</button>
+        </div>
+      </div>
+    `).join('')+`</div>`;
+}
+
+function renderAdminGroups(){
+  const data = getData();
+  return `
+    <div style="margin-bottom:20px">
+      <p style="font-size:.85rem;color:var(--text2);margin-bottom:16px;font-weight:600">Grupos ativos (arraste para reordenar):</p>
+      <div class="group-chips" id="groupChips">
+        ${data.groups.map(g=>`
+          <div class="group-chip">
+            ${g}
+            <button class="gchip-del" onclick="deleteGroup('${g}')" title="Remover">✕</button>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+    <div>
+      <p style="font-size:.75rem;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Adicionar novo grupo:</p>
+      <div class="add-group-row">
+        <input type="text" id="newGroupInput" placeholder="Ex: Sobremesas, Molhos..." maxlength="30">
+        <button class="btn-addgroup" onclick="addGroup()">+ Adicionar</button>
+      </div>
+    </div>
+  `;
+}
+
+function renderAdminForm(prod){
+  const data = getData();
+  const p = prod || {};
+  return `
+    <form onsubmit="saveProduct(event)" id="adminForm">
+      <div class="form-row full">
+        <div class="form-group">
+          <label>Imagem do Produto</label>
+          <div class="img-upload-area" onclick="document.getElementById('imgFileInput').click()">
+            <div id="imgPreviewArea">
+              ${p.img ? `<img src="${p.img}" class="img-preview" id="imgPreview">` : `<div style="font-size:2.5rem">📷</div><p style="font-size:.82rem;color:var(--text3);margin-top:6px">Clique para selecionar imagem</p>`}
+            </div>
+            <input type="file" id="imgFileInput" accept="image/*" onchange="handleImgUpload(this)">
+          </div>
+          <input type="hidden" id="prodImg" value="${p.img||''}">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Nome do Produto *</label>
+          <input type="text" id="prodName" value="${p.name||''}" placeholder="Ex: X-Burguer Especial" required>
+        </div>
+        <div class="form-group">
+          <label>Preço (R$) *</label>
+          <input type="number" id="prodPrice" value="${p.price||''}" placeholder="0,00" step="0.01" min="0" required>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Grupo *</label>
+          <select id="prodGroup" required>
+            <option value="">Selecione...</option>
+            ${data.groups.map(g=>`<option value="${g}" ${p.group===g?'selected':''}>${g}</option>`).join('')}
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Emoji (ícone)</label>
+          <input type="text" id="prodEmoji" value="${p.emoji||''}" placeholder="🍔" maxlength="4">
+        </div>
+      </div>
+      <div class="form-row full">
+        <div class="form-group">
+          <label>Descrição</label>
+          <textarea id="prodDesc" placeholder="Descreva os ingredientes e diferenciais...">${p.desc||''}</textarea>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>
+            <input type="checkbox" id="prodPromo" ${p.promo?'checked':''} style="width:auto;margin-right:6px">
+            Incluir nas Promoções
+          </label>
+        </div>
+        <div class="form-group" id="oldPriceBox" style="${p.promo?'':'display:none'}">
+          <label>Preço antigo (riscado)</label>
+          <input type="number" id="prodOldPrice" value="${p.oldPrice||''}" placeholder="0,00" step="0.01" min="0">
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:8px">
+        <button type="submit" class="btn-save">${editingProductId?'💾 Salvar alterações':'✅ Cadastrar produto'}</button>
+        ${editingProductId?`<button type="button" onclick="cancelEdit()" style="background:#f3f4f6;border:none;border-radius:10px;padding:12px 20px;cursor:pointer;font-weight:700;font-family:Nunito,sans-serif">Cancelar</button>`:''}
+      </div>
+    </form>
+    <script>document.getElementById('prodPromo').addEventListener('change',function(){document.getElementById('oldPriceBox').style.display=this.checked?'':'none'})<\/script>
+  `;
+}
+
+function handleImgUpload(input){
+  const file = input.files[0];
+  if(!file) return;
+  
+  const reader = new FileReader();
+  reader.onload = e => {
+    const src = e.target.result;
+    document.getElementById('prodImg').value = src;
+    document.getElementById('imgPreviewArea').innerHTML = `<img src="${src}" class="img-preview" id="imgPreview">`;
+  };
+  reader.readAsDataURL(file);
+}
+
+function saveProduct(e){
+  e.preventDefault();
+  const data = getData();
+  
+  const prod = {
+    id: editingProductId || Date.now(),
+    name: document.getElementById('prodName').value.trim(),
+    price: parseFloat(document.getElementById('prodPrice').value),
+    group: document.getElementById('prodGroup').value,
+    emoji: document.getElementById('prodEmoji').value.trim() || '🍔',
+    desc: document.getElementById('prodDesc').value.trim(),
+    img: document.getElementById('prodImg').value,
+    promo: document.getElementById('prodPromo').checked,
+    oldPrice: document.getElementById('prodOldPrice') ? parseFloat(document.getElementById('prodOldPrice').value)||0 : 0,
+  };
+  
+  if(editingProductId){
+    const idx = data.products.findIndex(p=>p.id===editingProductId);
+    if(idx>=0) data.products[idx] = prod;
+    toast('Produto atualizado!','success');
+  } else {
+    data.products.push(prod);
+    toast('Produto cadastrado!','success');
+  }
+  
+  saveData(data);
+  editingProductId = null;
+  switchAdminTab('produtos');
+}
+
+function editProduct(id){
+  const data = getData();
+  const prod = data.products.find(p=>p.id===id);
+  if(!prod) return;
+  editingProductId = id;
+  document.querySelectorAll('.atab')[2].click();
+  document.getElementById('adminContent').innerHTML = renderAdminForm(prod);
+}
+
+function deleteProduct(id){
+  if(!confirm('Remover este produto?')) return;
+  const data = getData();
+  data.products = data.products.filter(p=>p.id!==id);
+  saveData(data);
+  renderAdminTab('produtos');
+  toast('Produto removido.','error');
+}
+
+function cancelEdit(){
+  editingProductId = null;
+  switchAdminTab('adicionar');
+}
+
+function addGroup(){
+  const input = document.getElementById('newGroupInput');
+  const name = input.value.trim();
+  if(!name) return;
+  const data = getData();
+  if(data.groups.includes(name)){ toast('Grupo já existe!','error'); return; }
+  data.groups.push(name);
+  saveData(data);
+  input.value = '';
+  renderAdminTab('grupos');
+  toast(`Grupo "${name}" criado!`,'success');
+}
+
+function deleteGroup(name){
+  if(!confirm(`Remover o grupo "${name}"?\nOs produtos deste grupo não serão deletados.`)) return;
+  const data = getData();
+  data.groups = data.groups.filter(g=>g!==name);
+  saveData(data);
+  renderAdminTab('grupos');
+  toast(`Grupo "${name}" removido.`,'error');
+}
+
+/* ════════════════════════
+   TOAST
+════════════════════════ */
+function toast(msg, type='ok'){
+  const el = document.createElement('div');
+  el.className = `toast-msg ${type}`;
+  el.textContent = msg;
+  document.getElementById('toast').appendChild(el);
+  setTimeout(()=>{el.style.animation='toastOut .3s forwards';setTimeout(()=>el.remove(),300);}, 2500);
+}
+
+/* ════════════════════════
+   INIT
+════════════════════════ */
+setTimeout(()=>{
+  renderCardapio();
+  updateCartUI();
+}, 100);
+</script>
+</body>
+</html>
