@@ -1245,30 +1245,81 @@ function handleImgUpload(input){
       .toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,'');
     const fileName = `${nomeProd}-${Date.now()}.${mimeType.split('/')[1]||'jpg'}`;
 
-    fetch(GAS_LANCHE, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ imageData: base64data, mimeType, fileName })
-    })
-    .then(r => r.json())
-    .then(res => {
-      if(res.url){
-        document.getElementById('prodImg').value = res.url;
-        document.getElementById('imgPreviewArea').innerHTML =
-          `<img src="${res.url}" class="img-preview"
-            onerror="this.src='${base64full}'">
-           <div style="margin-top:8px;font-size:.78rem;font-weight:700;color:var(--green)">✅ Imagem salva no Drive!</div>`;
-      } else {
-        throw new Error(res.erro || 'Resposta inválida');
-      }
-    })
-    .catch(err => {
-      console.error('Erro upload Drive:', err);
+    /* ── UPLOAD VIA JSONP EM CHUNKS ──
+       GAS não aceita POST cross-origin, então enviamos via GET (JSONP).
+       Imagens grandes são divididas em partes de 30KB cada.          */
+    const CHUNK = 30000;
+    const chunks = [];
+    for(let i=0;i<base64data.length;i+=CHUNK)
+      chunks.push(base64data.slice(i,i+CHUNK));
+
+    const totalChunks = chunks.length;
+    const uploadId = 'up_' + Date.now();
+    let chunkIndex = 0;
+
+    function updateProgress(){
+      const pct = Math.round((chunkIndex/totalChunks)*100);
+      const statusEl = document.getElementById('uploadStatus');
+      if(statusEl) statusEl.textContent = `⏳ Enviando... ${pct}%`;
+    }
+
+    function sendChunk(){
+      if(chunkIndex >= totalChunks){ finalize(); return; }
+      updateProgress();
+      const cb = 'cb_' + Date.now() + '_' + chunkIndex;
+      const s  = document.createElement('script');
+      const to = setTimeout(()=>{ delete window[cb]; s.remove(); onError('timeout chunk '+chunkIndex); }, 30000);
+
+      window[cb] = function(res){
+        clearTimeout(to); delete window[cb]; s.remove();
+        if(res && res.ok){ chunkIndex++; sendChunk(); }
+        else onError(res ? res.erro : 'sem resposta');
+      };
+
+      const params = new URLSearchParams({
+        action:'chunk', uploadId, chunkIndex, totalChunks,
+        mimeType, fileName,
+        data: chunks[chunkIndex],
+        callback: cb
+      });
+      s.src = GAS_LANCHE + '?' + params.toString();
+      s.onerror = ()=>{ clearTimeout(to); onError('script error chunk '+chunkIndex); };
+      document.body.appendChild(s);
+    }
+
+    function finalize(){
+      const cb = 'cb_final_' + Date.now();
+      const s  = document.createElement('script');
+      const to = setTimeout(()=>{ delete window[cb]; s.remove(); onError('timeout finalize'); }, 30000);
+
+      window[cb] = function(res){
+        clearTimeout(to); delete window[cb]; s.remove();
+        if(res && res.url){
+          document.getElementById('prodImg').value = res.url;
+          document.getElementById('imgPreviewArea').innerHTML =
+            `<img src="${res.url}" class="img-preview"
+               onerror="this.src='${base64full}'">
+             <div style="margin-top:8px;font-size:.78rem;font-weight:700;color:var(--green)">✅ Imagem salva no Drive!</div>`;
+        } else {
+          onError(res ? res.erro : 'sem URL');
+        }
+      };
+
+      const params = new URLSearchParams({ action:'finalize', uploadId, callback: cb });
+      s.src = GAS_LANCHE + '?' + params.toString();
+      s.onerror = ()=>{ clearTimeout(to); onError('script error finalize'); };
+      document.body.appendChild(s);
+    }
+
+    function onError(msg){
+      console.error('Erro upload Drive:', msg);
       document.getElementById('prodImg').value = base64full;
       document.getElementById('imgPreviewArea').innerHTML =
         `<img src="${base64full}" class="img-preview">
          <div style="margin-top:8px;font-size:.78rem;font-weight:700;color:var(--amber)">⚠️ Salvo localmente (Drive indisponível)</div>`;
-    });
+    }
+
+    sendChunk();
   };
   reader.readAsDataURL(file);
 }
