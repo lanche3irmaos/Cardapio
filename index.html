@@ -605,14 +605,16 @@ function gasGet(params, cb){
 }
 
 function gasPost(payload, cb){
+  // Content-Type text/plain evita o preflight CORS que o GAS não suporta.
+  // O GAS lê e.postData.contents normalmente independente do content-type.
   fetch(GAS, {
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain' },
     body: JSON.stringify(payload)
   })
-  .then(r=>r.json())
-  .then(d=>cb(d))
-  .catch(()=>cb(null));
+  .then(r => r.json())
+  .then(d => cb(d))
+  .catch(() => cb(null));
 }
 
 /* ════════════════════════
