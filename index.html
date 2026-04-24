@@ -154,6 +154,11 @@ body{font-family:'Nunito',sans-serif;background:var(--cream);color:var(--text);o
 .summary-row{display:flex;justify-content:space-between;padding:8px 0;font-size:.9rem;color:var(--text2);border-bottom:1px solid #f5ebe0}
 .summary-row.total{border-bottom:none;margin-top:8px;font-size:1.1rem;font-weight:900;color:var(--text)}
 .summary-row.total .sum-price{font-family:'Fredoka One',cursive;font-size:1.6rem;color:var(--brand)}
+.address-box{margin-top:16px;padding:16px;background:#fff8f5;border:2px dashed rgba(255,69,0,.2);border-radius:12px}
+.address-label{display:flex;align-items:center;gap:7px;font-size:.8rem;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px}
+.address-input{width:100%;border:2px solid #e5e7eb;border-radius:10px;padding:11px 14px;font-family:'Nunito',sans-serif;font-size:.92rem;resize:none;outline:none;transition:border-color .2s;background:#fff;color:var(--text)}
+.address-input:focus{border-color:var(--brand)}
+.address-err{display:none;color:var(--brand);font-size:.78rem;font-weight:700;margin-top:7px}
 .btn-checkout{width:100%;background:linear-gradient(135deg,#25D366,#1ebe5a);color:#fff;border:none;border-radius:14px;padding:18px;font-family:'Fredoka One',cursive;font-size:1.3rem;cursor:pointer;margin-top:16px;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:10px;letter-spacing:.5px}
 .btn-checkout:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(37,211,102,.4)}
 .btn-checkout:disabled{opacity:.5;cursor:not-allowed;transform:none}
@@ -820,6 +825,14 @@ function renderCarrinho(){
         <span>Total do pedido</span>
         <span class="sum-price">R$ ${subtotal.toFixed(2).replace('.',',')}</span>
       </div>
+      <div class="address-box" id="addressBox">
+        <label class="address-label">
+          <span class="address-icon">📍</span>
+          Endereço de entrega <span style="color:var(--brand)">*</span>
+        </label>
+        <textarea id="clientAddress" class="address-input" placeholder="Rua, número, bairro, complemento..." rows="3"></textarea>
+        <div class="address-err" id="addressErr">⚠️ Informe seu endereço para continuar.</div>
+      </div>
       <button class="btn-checkout" onclick="checkout()">
         💬 Fechar pedido com a loja
       </button>
@@ -829,7 +842,23 @@ function renderCarrinho(){
 
 function checkout(){
   if(!cart.length) return;
-  const msg = `Olá, lanche 3 irmãos, fiz a anotação online do pedido, poderia informar suas opções de pagamento?`;
+  const addrEl = document.getElementById('clientAddress');
+  const errEl  = document.getElementById('addressErr');
+  const addr   = addrEl ? addrEl.value.trim() : '';
+  if(!addr){
+    errEl.style.display = 'block';
+    addrEl.focus();
+    addrEl.style.borderColor = 'var(--brand)';
+    addrEl.addEventListener('input', ()=>{ errEl.style.display='none'; addrEl.style.borderColor=''; }, {once:true});
+    return;
+  }
+  const lines = cart.map(c=>`• ${c.qty}x ${c.name} — R$ ${(c.price*c.qty).toFixed(2).replace('.',',')}`);
+  const subtotal = cart.reduce((s,c)=>s+c.price*c.qty,0);
+  const msg = `🍔 *Pedido - Lanche 3 Irmãos*\n\n`
+    + lines.join('\n')
+    + `\n\n💰 *Total: R$ ${subtotal.toFixed(2).replace('.',',')}*`
+    + `\n\n📍 *Endereço de entrega:* ${addr}`
+    + `\n\nOlá, lanche 3 irmãos, fiz a anotação online do pedido, poderia informar suas opções de pagamento?`;
   const url = `https://wa.me/${WHATSAPP}?text=${encodeURIComponent(msg)}`;
   window.open(url, '_blank');
 }
