@@ -93,8 +93,11 @@ body{font-family:'Nunito',sans-serif;background:var(--cream);color:var(--text);o
 .product-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:20px}
 .product-card{background:#fff;border-radius:var(--radius);overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.07);transition:transform .25s,box-shadow .25s;border:1px solid rgba(0,0,0,.05);cursor:pointer}
 .product-card:hover{transform:translateY(-4px);box-shadow:var(--shadow)}
-.product-card .prod-img{width:100%;height:180px;object-fit:cover;background:linear-gradient(135deg,#ffe8d6,#ffd0a8);display:flex;align-items:center;justify-content:center;font-size:4rem}
-.product-card .prod-img img{width:100%;height:100%;object-fit:cover}
+.product-card .prod-img{width:100%;height:180px;object-fit:cover;background:linear-gradient(135deg,#ffe8d6,#ffd0a8);display:flex;align-items:center;justify-content:center;font-size:4rem;position:relative;overflow:hidden;cursor:zoom-in}
+.product-card .prod-img img{width:100%;height:100%;object-fit:cover;transition:transform .3s}
+.product-card .prod-img:hover img{transform:scale(1.06)}
+.prod-img-zoom-hint{position:absolute;bottom:8px;right:8px;background:rgba(0,0,0,.45);color:#fff;font-size:.65rem;font-weight:700;padding:4px 8px;border-radius:20px;opacity:0;transition:opacity .2s;pointer-events:none;letter-spacing:.5px}
+.product-card .prod-img:hover .prod-img-zoom-hint{opacity:1}
 .product-card .prod-body{padding:16px}
 .product-card .prod-name{font-weight:800;font-size:1rem;color:var(--text);margin-bottom:4px}
 .product-card .prod-desc{font-size:.8rem;color:var(--text3);margin-bottom:12px;line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
@@ -104,6 +107,24 @@ body{font-family:'Nunito',sans-serif;background:var(--cream);color:var(--text);o
 .btn-add:hover{background:var(--brand2);transform:scale(1.05)}
 .btn-add:active{transform:scale(.96)}
 
+/* ── LIGHTBOX ── */
+#lightbox{position:fixed;inset:0;z-index:8000;background:rgba(0,0,0,.88);display:none;align-items:center;justify-content:center;padding:20px;cursor:zoom-out}
+#lightbox.open{display:flex;animation:lbIn .25s cubic-bezier(.16,1,.3,1)}
+@keyframes lbIn{from{opacity:0}to{opacity:1}}
+#lightbox.close-anim{animation:lbOut .2s forwards}
+@keyframes lbOut{to{opacity:0}}
+.lb-inner{position:relative;max-width:min(700px,90vw);max-height:85vh;display:flex;flex-direction:column;align-items:center;gap:16px;cursor:default}
+#lbImg{max-width:100%;max-height:70vh;border-radius:16px;object-fit:contain;box-shadow:0 20px 60px rgba(0,0,0,.5);animation:lbImgIn .3s cubic-bezier(.16,1,.3,1)}
+@keyframes lbImgIn{from{transform:scale(.9)}to{transform:scale(1)}}
+.lb-info{text-align:center;color:#fff}
+.lb-name{font-family:'Fredoka One',cursive;font-size:1.5rem;margin-bottom:4px}
+.lb-desc{font-size:.85rem;opacity:.75;max-width:500px;line-height:1.5}
+.lb-price{font-family:'Fredoka One',cursive;font-size:1.8rem;color:var(--brand3);margin-top:6px}
+.lb-actions{display:flex;gap:12px;align-items:center;margin-top:4px}
+.lb-close{position:absolute;top:-12px;right:-12px;width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.15);border:none;color:#fff;font-size:1.1rem;cursor:pointer;transition:background .2s;display:flex;align-items:center;justify-content:center}
+.lb-close:hover{background:rgba(255,69,0,.6)}
+.lb-emoji-fallback{font-size:8rem;display:flex;align-items:center;justify-content:center;height:220px;background:rgba(255,255,255,.06);border-radius:16px;width:300px}
+
 /* ── PROMO ── */
 .promo-banner{background:linear-gradient(135deg,#FFD700,#FF6B35);border-radius:var(--radius);padding:24px;margin-bottom:20px;color:#fff;display:flex;align-items:center;gap:16px}
 .promo-banner .promo-icon{font-size:3rem;flex-shrink:0}
@@ -111,7 +132,7 @@ body{font-family:'Nunito',sans-serif;background:var(--cream);color:var(--text);o
 .promo-banner p{font-size:.85rem;opacity:.9;margin-top:4px}
 .promo-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
 .promo-item{background:#fff;border-radius:12px;padding:16px;border:2px solid #FFD700;display:flex;gap:12px;align-items:center}
-.promo-item .pi-emoji{font-size:2.5rem;flex-shrink:0}
+.promo-item .pi-emoji{font-size:2.5rem;flex-shrink:0;cursor:zoom-in}
 .promo-item .pi-name{font-weight:800;font-size:.95rem}
 .promo-item .pi-desc{font-size:.78rem;color:var(--text3);margin-top:2px}
 .promo-item .pi-price{font-family:'Fredoka One',cursive;font-size:1.2rem;color:var(--brand);margin-top:4px}
@@ -138,7 +159,7 @@ body{font-family:'Nunito',sans-serif;background:var(--cream);color:var(--text);o
 
 .cart-items{display:flex;flex-direction:column;gap:12px;margin-bottom:24px}
 .cart-item{background:#fff;border-radius:12px;padding:16px;display:flex;align-items:center;gap:14px;box-shadow:0 2px 8px rgba(0,0,0,.06)}
-.ci-thumb{width:64px;height:64px;border-radius:10px;object-fit:cover;background:linear-gradient(135deg,#ffe8d6,#ffd0a8);display:flex;align-items:center;justify-content:center;font-size:2rem;flex-shrink:0;overflow:hidden}
+.ci-thumb{width:64px;height:64px;border-radius:10px;object-fit:cover;background:linear-gradient(135deg,#ffe8d6,#ffd0a8);display:flex;align-items:center;justify-content:center;font-size:2rem;flex-shrink:0;overflow:hidden;cursor:zoom-in}
 .ci-thumb img{width:100%;height:100%;object-fit:cover}
 .ci-info{flex:1;min-width:0}
 .ci-name{font-weight:800;font-size:.95rem;truncate:ellipsis;overflow:hidden;white-space:nowrap}
@@ -324,6 +345,22 @@ body{font-family:'Nunito',sans-serif;background:var(--cream);color:var(--text);o
     <div class="splash-tagline">Sabor que une família</div>
     <div class="splash-divider"></div>
     <div class="splash-bar"><div class="splash-fill"></div></div>
+  </div>
+</div>
+
+<!-- LIGHTBOX -->
+<div id="lightbox" onclick="closeLightbox(event)">
+  <div class="lb-inner" onclick="event.stopPropagation()">
+    <button class="lb-close" onclick="closeLightbox()">✕</button>
+    <div id="lbImgWrap"></div>
+    <div class="lb-info">
+      <div class="lb-name" id="lbName"></div>
+      <div class="lb-desc" id="lbDesc"></div>
+      <div class="lb-price" id="lbPrice"></div>
+    </div>
+    <div class="lb-actions">
+      <button class="btn-add" id="lbAddBtn" style="font-size:1rem;padding:12px 28px">+ Adicionar ao pedido</button>
+    </div>
   </div>
 </div>
 
@@ -605,8 +642,6 @@ function gasGet(params, cb){
 }
 
 function gasPost(payload, cb){
-  // Content-Type text/plain evita o preflight CORS que o GAS não suporta.
-  // O GAS lê e.postData.contents normalmente independente do content-type.
   fetch(GAS, {
     method: 'POST',
     headers: { 'Content-Type': 'text/plain' },
@@ -643,6 +678,44 @@ function carregarTudo(onDone){
     done();
   });
 }
+
+/* ════════════════════════
+   LIGHTBOX
+════════════════════════ */
+function openLightbox(prodId){
+  const p = AppData.products.find(x=>String(x.id)===String(prodId));
+  if(!p) return;
+
+  const lb = document.getElementById('lightbox');
+  document.getElementById('lbName').textContent = p.name;
+  document.getElementById('lbDesc').textContent = p.desc || '';
+  document.getElementById('lbPrice').textContent = 'R$ ' + Number(p.price).toFixed(2).replace('.',',');
+
+  const wrap = document.getElementById('lbImgWrap');
+  if(p.img){
+    wrap.innerHTML = `<img id="lbImg" src="${p.img}" alt="${p.name}" onerror="this.parentNode.innerHTML='<div class=\\'lb-emoji-fallback\\'>${p.emoji||'🍔'}</div>'">`;
+  } else {
+    wrap.innerHTML = `<div class="lb-emoji-fallback">${p.emoji||'🍔'}</div>`;
+  }
+
+  document.getElementById('lbAddBtn').onclick = ()=>{
+    addToCart(p.id);
+    closeLightbox();
+  };
+
+  lb.classList.remove('close-anim');
+  lb.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeLightbox(e){
+  if(e && e.target !== document.getElementById('lightbox') && e.type !== 'click') return;
+  const lb = document.getElementById('lightbox');
+  lb.classList.add('close-anim');
+  setTimeout(()=>{ lb.classList.remove('open','close-anim'); document.body.style.overflow=''; }, 200);
+}
+
+document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeLightbox({target:document.getElementById('lightbox')}); });
 
 /* ════════════════════════
    VIEWS
@@ -782,10 +855,11 @@ function renderCardapio(){
 
   grid.innerHTML = prods.map(p=>`
     <div class="product-card">
-      <div class="prod-img" data-fb="${p.emoji||'🍔'}">
+      <div class="prod-img" onclick="openLightbox('${p.id}')">
         ${p.img
           ? `<img src="${p.img}" alt="${p.name}" onerror="this.parentNode.innerHTML='<span style=\\'font-size:3rem\\'>${p.emoji||'🍔'}</span>'">`
           : `<span style="font-size:3rem">${p.emoji||'🍔'}</span>`}
+        <div class="prod-img-zoom-hint">🔍 Ver foto</div>
       </div>
       <div class="prod-body">
         <div class="prod-name">${p.name}</div>
@@ -808,7 +882,6 @@ function filterGroup(g){
 
 /* ════════════════════════
    PROMOÇÕES
-   CORRIGIDO: código duplicado removido
 ════════════════════════ */
 function renderPromocoes(){
   const promos = AppData.products.filter(p=>p.promo);
@@ -821,7 +894,7 @@ function renderPromocoes(){
 
   list.innerHTML = promos.map(p=>`
     <div class="promo-item">
-      <div class="pi-emoji">${p.emoji||'🍔'}</div>
+      <div class="pi-emoji" onclick="openLightbox('${p.id}')">${p.emoji||'🍔'}</div>
       <div style="flex:1">
         <div class="pi-name">${p.name}</div>
         <div class="pi-desc">${p.desc||''}</div>
@@ -903,7 +976,7 @@ function renderCarrinho(){
 
   const itemsHtml = cart.map(item=>`
     <div class="cart-item">
-      <div class="ci-thumb">
+      <div class="ci-thumb" onclick="openLightbox('${item.id}')">
         ${item.img
           ? `<img src="${item.img}" alt="${item.name}" onerror="this.style.display='none'">`
           : `<span style="font-size:2rem">${item.emoji||'🍔'}</span>`}
@@ -1233,7 +1306,6 @@ function renderAdminForm(prod){
   `;
 }
 
-/* CORRIGIDO: chave extra removida */
 function setupPromoToggle(){
   const el = document.getElementById('prodPromo');
   const box = document.getElementById('oldPriceBox');
@@ -1322,7 +1394,6 @@ function editProduct(id){
   setupPromoToggle();
 }
 
-/* CORRIGIDO: deleteProduto agora via POST (consistente com gasPost) */
 function deleteProduct(id){
   if(!confirm('Remover este produto?')) return;
   gasPost({action:'deleteProduto', data:{id}}, res=>{
