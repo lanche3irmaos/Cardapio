@@ -319,6 +319,15 @@ body{font-family:'Nunito',sans-serif;background:var(--cream);color:var(--text);o
 .food-float{display:inline-block;animation:foodFloat 3s ease-in-out infinite}
 @keyframes foodFloat{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-12px) rotate(3deg)}}
 
+/* ── SKELETON ── */
+@keyframes shimmer{0%{background-position:-600px 0}100%{background-position:600px 0}}
+.skeleton{background:linear-gradient(90deg,#f0e6d8 25%,#ffe8d6 50%,#f0e6d8 75%);background-size:600px 100%;animation:shimmer 1.4s infinite linear;border-radius:8px}
+.skel-card{background:#fff;border-radius:var(--radius);overflow:hidden;border:1px solid rgba(0,0,0,.05)}
+.skel-img{width:100%;height:180px}.skel-body{padding:16px}
+.skel-line{height:14px;margin-bottom:10px}.skel-line.short{width:60%}.skel-line.xshort{width:40%}
+.skel-footer{display:flex;justify-content:space-between;align-items:center;margin-top:14px}
+.skel-price{height:22px;width:70px}.skel-btn{height:34px;width:90px;border-radius:10px}
+
 @media(max-width:768px){
   #sidebar{display:none}
   #mobileNav{display:flex}
@@ -588,16 +597,33 @@ body{font-family:'Nunito',sans-serif;background:var(--cream);color:var(--text);o
 })();
 
 /* ════════════════════════
-   SPLASH TIMER
+   SPLASH — fecha quando dados chegam
 ════════════════════════ */
-setTimeout(()=>{
+let _splashDone = false;
+let _dadosCarregados = false;
+const _splashMinMs = 1200; // mínimo estético
+const _splashStart = Date.now();
+
+function fecharSplash(){
+  if(_splashDone) return;
+  _splashDone = true;
   const sp = document.getElementById('splash');
   sp.classList.add('hide');
   setTimeout(()=>{
     sp.style.display='none';
     document.getElementById('app').classList.add('visible');
   }, 600);
-}, 5000);
+}
+
+function tentarFecharSplash(){
+  if(!_dadosCarregados) return;
+  const elapsed = Date.now() - _splashStart;
+  const delay = Math.max(0, _splashMinMs - elapsed);
+  setTimeout(fecharSplash, delay);
+}
+
+// Segurança: fecha em 4s no máximo mesmo sem dados
+setTimeout(fecharSplash, 4000);
 
 /* ════════════════════════
    CONFIG
@@ -653,30 +679,90 @@ function gasPost(payload, cb){
 }
 
 /* ════════════════════════
+   CACHE LOCAL
+════════════════════════ */
+const CACHE_KEY = 'l3i_cache';
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutos
+
+function salvarCache(){
+  try {
+    localStorage.setItem(CACHE_KEY, JSON.stringify({
+      ts: Date.now(),
+      products: AppData.products,
+      groups:   AppData.groups,
+      loja:     AppData.loja
+    }));
+  } catch(e){}
+}
+
+function carregarCache(){
+  try {
+    const raw = localStorage.getItem(CACHE_KEY);
+    if(!raw) return false;
+    const c = JSON.parse(raw);
+    if(Date.now() - c.ts > CACHE_TTL) return false;
+    if(c.products && c.products.length) AppData.products = c.products;
+    if(c.groups   && c.groups.length)   AppData.groups   = c.groups;
+    if(c.loja)                          AppData.loja     = {...AppData.loja, ...c.loja};
+    return true;
+  } catch(e){ return false; }
+}
+
+function invalidarCache(){ try{ localStorage.removeItem(CACHE_KEY); }catch(e){} }
+
+/* ════════════════════════
    CARREGAR DADOS DO SHEETS
+   Uma única chamada consolidada ao GAS
 ════════════════════════ */
 function carregarTudo(onDone){
-  let loaded = 0;
-  const done = ()=>{ loaded++; if(loaded===3) onDone(); };
+  // Mostrar do cache imediatamente se disponível
+  if(carregarCache()){
+    onDone();
+    // Atualiza em background sem bloquear a UI
+    gasGet({action:'getTudo'}, d => {
+      if(!d) return;
+      let alterou = false;
+      if(d.produtos && d.produtos.length){
+        AppData.products = d.produtos.map(mapProduto);
+        alterou = true;
+      }
+      if(d.grupos && d.grupos.length){ AppData.groups = d.grupos; alterou = true; }
+      if(d.loja && Object.keys(d.loja).length){ AppData.loja = {...AppData.loja, ...d.loja}; alterou = true; }
+      if(alterou){
+        salvarCache();
+        renderCardapio();
+        renderPromocoes();
+        renderLocalizacao();
+      }
+    });
+    return;
+  }
 
-  gasGet({action:'getProdutos'}, d=>{
-    if(d && d.produtos) AppData.products = d.produtos.map(p=>({
-      id:p.id, name:p.nome, price:parseFloat(p.preco)||0,
-      group:p.grupo, desc:p.desc||'', img:p.img||'',
-      emoji:p.emoji||'🍔', promo:p.promo, oldPrice:parseFloat(p.oldPrice)||0
-    }));
-    done();
+  // Sem cache: tenta ação consolidada, com fallback para 3 chamadas
+  gasGet({action:'getTudo'}, d => {
+    if(d && (d.produtos || d.grupos || d.loja)){
+      if(d.produtos) AppData.products = d.produtos.map(mapProduto);
+      if(d.grupos && d.grupos.length) AppData.groups = d.grupos;
+      if(d.loja && Object.keys(d.loja).length) AppData.loja = {...AppData.loja, ...d.loja};
+      salvarCache();
+      onDone();
+    } else {
+      // Fallback: 3 chamadas paralelas (comportamento anterior)
+      let loaded = 0;
+      const done = ()=>{ loaded++; if(loaded===3){ salvarCache(); onDone(); } };
+      gasGet({action:'getProdutos'}, d=>{ if(d && d.produtos) AppData.products = d.produtos.map(mapProduto); done(); });
+      gasGet({action:'getGrupos'},   d=>{ if(d && d.grupos && d.grupos.length) AppData.groups = d.grupos; done(); });
+      gasGet({action:'getLoja'},     d=>{ if(d && d.loja && Object.keys(d.loja).length) AppData.loja = {...AppData.loja, ...d.loja}; done(); });
+    }
   });
+}
 
-  gasGet({action:'getGrupos'}, d=>{
-    if(d && d.grupos && d.grupos.length) AppData.groups = d.grupos;
-    done();
-  });
-
-  gasGet({action:'getLoja'}, d=>{
-    if(d && d.loja && Object.keys(d.loja).length) AppData.loja = {...AppData.loja, ...d.loja};
-    done();
-  });
+function mapProduto(p){
+  return {
+    id:p.id, name:p.nome, price:parseFloat(p.preco)||0,
+    group:p.grupo, desc:p.desc||'', img:p.img||'',
+    emoji:p.emoji||'🍔', promo:p.promo, oldPrice:parseFloat(p.oldPrice)||0
+  };
 }
 
 /* ════════════════════════
@@ -720,15 +806,17 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeLightbox({ta
 /* ════════════════════════
    VIEWS
 ════════════════════════ */
+const _rendered = {};
+function invalidarRenders(){ delete _rendered.cardapio; delete _rendered.promocoes; delete _rendered.localizacao; }
 function showView(name, btnEl){
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
   document.getElementById('view'+name.charAt(0).toUpperCase()+name.slice(1)).classList.add('active');
   document.querySelectorAll('#sidebar .nav-btn').forEach(b=>b.classList.remove('active'));
   if(btnEl) btnEl.classList.add('active');
-  if(name==='cardapio')    renderCardapio();
-  if(name==='promocoes')   renderPromocoes();
-  if(name==='carrinho')    renderCarrinho();
-  if(name==='localizacao') renderLocalizacao();
+  if(name==='cardapio'    && !_rendered.cardapio)   { renderCardapio();    _rendered.cardapio=1; }
+  if(name==='promocoes'   && !_rendered.promocoes)  { renderPromocoes();   _rendered.promocoes=1; }
+  if(name==='localizacao' && !_rendered.localizacao){ renderLocalizacao(); _rendered.localizacao=1; }
+  if(name==='carrinho') renderCarrinho();
 }
 function setMobActive(btn){
   document.querySelectorAll('.mob-nav-btn').forEach(b=>b.classList.remove('active'));
@@ -877,7 +965,8 @@ function renderCardapio(){
 
 function filterGroup(g){
   currentGroup = g==='Todos' ? 'todos' : g;
-  renderCardapio();
+  delete _rendered.cardapio;
+  showView('cardapio', null);
 }
 
 /* ════════════════════════
@@ -1177,8 +1266,12 @@ function openAdmin(){
 }
 function closeAdmin(){
   document.getElementById('adminPanel').classList.remove('open');
+  invalidarCache();
+  invalidarRenders();
   renderCardapio();
+  _rendered.cardapio = 1;
   renderPromocoes();
+  _rendered.promocoes = 1;
 }
 
 function switchAdminTab(tab){
@@ -1553,13 +1646,33 @@ function toast(msg, type='ok'){
    INIT
 ════════════════════════ */
 (function init(){
+  // Skeleton imediato — parece carregando em vez de vazio
+  const skeletonGrid = Array(6).fill(0).map(()=>`
+    <div class="skel-card">
+      <div class="skel-img skeleton"></div>
+      <div class="skel-body">
+        <div class="skel-line skeleton"></div>
+        <div class="skel-line short skeleton"></div>
+        <div class="skel-footer">
+          <div class="skel-price skeleton"></div>
+          <div class="skel-btn skeleton"></div>
+        </div>
+      </div>
+    </div>
+  `).join('');
   const grid = document.getElementById('productGrid');
-  if(grid) grid.innerHTML=`<div class="empty-state"><div class="es-icon">⏳</div><p>Carregando cardápio...</p></div>`;
+  if(grid) grid.innerHTML = skeletonGrid;
+
+  // Pré-aquece o GAS IMEDIATAMENTE (disparo sem aguardar resposta)
+  // Isso "acorda" o servidor enquanto o splash toca
+  gasGet({action:'ping'}, ()=>{});
 
   carregarTudo(()=>{
-    renderCardapio();
-    renderLocalizacao();
+    _dadosCarregados = true;
+    renderCardapio();    _rendered.cardapio    = 1;
+    renderLocalizacao(); _rendered.localizacao = 1;
     updateCartUI();
+    tentarFecharSplash();
   });
 })();
 </script>
